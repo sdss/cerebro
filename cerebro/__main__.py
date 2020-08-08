@@ -53,6 +53,7 @@ def cerebro():
               help='Path to configuration file.')
 @cli_coro(debug=True)
 async def daemon(config):
+    """Handle the daemon."""
 
     if not config:
         config = (pathlib.Path(os.environ['SDSSCORE_DIR']) / 'configuration' /
@@ -60,7 +61,11 @@ async def daemon(config):
 
     cerebro = Cerebro(config=config)
 
-    cerebro.loop.run_forever()
+    try:
+        cerebro.loop.run_forever()
+    except KeyboardInterrupt:
+        cerebro.stop()
+        cerebro.loop.stop()
 
 
 def main():

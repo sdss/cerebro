@@ -16,6 +16,37 @@ from .source import DataPoints, Source
 
 
 class TronSource(Source):
+    """A data source that monitors a Tron connection.
+
+    Connects to Tron as a TCP client and parses actor keywords. Data values
+    are sent to cerebro with the actor name as ``measurement`` and the keyword
+    name as ``field_key``. If the key contains multiple values, the name of
+    each value is added to the ``field_key`` as ``keyword_keyname``. If the
+    value does not have a name, the zero-indexed index of its key is used.
+
+    Internally it uses `CLU <https://github.com/sdss/clu>`__ to establish the
+    connection to Tron and parse the keywords. It requires ``actorkeys`` to be
+    importable.
+
+    Parameters
+    ----------
+    name : str
+        The name of the data source.
+    bucket : str
+        The bucket to write to. If not set it will use the default bucket.
+    tags : dict
+        A dictionary of tags to be associated with all measurements.
+    actors : list
+        A list of actor names to monitor.
+    host : str
+        The host on which to connect to Tron.
+    port : int
+        The port on which Tron is running.
+    keywords : dict
+        A list of keywords to monitor for a given actor. If `None`, all
+        keywords are monitored and recorded.
+
+    """
 
     source_type = 'tron'
 
@@ -31,17 +62,27 @@ class TronSource(Source):
             self.tron.models[model].register_callback(self.process_keyword)
 
     async def start(self):
+        """Starts the connection to Tron."""
+
         await self.tron.start(get_keys=False)
 
     def stop(self):
-        self.tron.stop()
+        """Closes the connection to Tron."""
 
-    def process_keyword(self, model, keyword):
+        if self.tron and self.tron._client:
+            self.tron.stop()
+
+    async def process_keyword(self, model, keyword):
+        """Processes a keyword received from Tron."""
 
         key = keyword.key
         name = keyword.name
 
         actor = model.name
+
+        if self.keywords:
+            if actor in self.keywords and name in self.keywords[actor]:
+                return
 
         if len(key.values) == 0:
             return

@@ -8,6 +8,7 @@
 
 import asyncio
 import os
+import pathlib
 import time
 import warnings
 
@@ -18,10 +19,12 @@ from rx.scheduler.eventloop import AsyncIOScheduler
 
 from sdsstools import read_yaml_file
 
+from . import log
 from .source import Source, get_source_subclass
 
 
 class MetaCerebro(type):
+    """Metaclass for Cerebro."""
 
     def __call__(cls, *args, **kwargs):
         args, kwargs = cls.__parse_config__(cls, *args, **kwargs)
@@ -31,8 +34,62 @@ class MetaCerebro(type):
 
 
 class Cerebro(list, metaclass=MetaCerebro):
+    """Handles a list of data sources and writes to an InfluxDB v2 server.
+
+    Creates an `RX <https://rxpy.readthedocs.io/en/latest/>`__ observer that
+    monitors a list of data sources.
+
+    url : str
+        The port-qualified URL of the InfluxDB v2 database. Defaults to
+        ``http://localhost:9999``.
+    token : str
+        The token to be used to write to the database buckets. If `None`,
+        uses the value from ``$INFLUXDB_V2_TOKEN``.
+    org : str
+        The InfluxDB organisation.
+    default_bucket : str
+        The default bucket where to write data. Can be overridden by each
+        individual `data source <.Source>`.
+    tags : dictionary
+        A list of tags to add to all the measurements.
+    sources : list
+        A list of `.Source` instances to listen to.
+    config : dict or str
+        A file or dictionary from which to load the configuration. The format
+        exactly follows the signature of `.Cerebro` and the data sources it
+        refers to. For example:
+
+        .. code-block:: yaml
+
+            url: http://localhost:9999
+            token: null
+            org: SDSS
+            default_bucket: FPS
+            ntp_server: us.pool.ntp.org
+
+            tags:
+                observatory: ${OBSERVATORY}
+
+            sources:
+                tron:
+                    type: tron
+                    bucket: Actors
+                    host: localhost
+                    port: 6093
+                    actors:
+                        - tcc
+                        - apo
+
+        Each source must include a ``type`` key that correspond to the
+        ``source_type`` value of the `.Source` subclass to be used.
+    ntp_server : str
+        The route to the NTP server to use. The server is queried every hour
+        to determine the offset between the NTP pool and the local computer.
+
+    """
 
     def __parse_config__(cls, *args, **kwargs):
+        """Overrides initialisation parameters from a configuration file."""
 
         if kwargs.get('config', None) is None:
             return args, kwargs
@@ -40,7 +97,12 @@ class Cerebro(list, metaclass=MetaCerebro):
         kwargs.pop('sources', None)  # Remove input sources if defined.
 
         config_file = kwargs.pop('config')
-        config = read_yaml_file(config_file)
+        if isinstance(config_file, (str, pathlib.Path)):
+            config = read_yaml_file(config_file)
+        elif isinstance(config_file, dict):
+            config = config_file.copy()
+        else:
+            raise ValueError(f'Invalid type {type(config_file)} for config.')
         config.update(kwargs)
 
         sources_config = config.pop('sources', [])
@@ -88,6 +150,7 @@ class Cerebro(list, metaclass=MetaCerebro):
         self.loop.call_soon(self.update_time_offset, ntp_server)
 
     def stop(self):
+        """Stops the InfluxDB client and all the sources."""
 
         if hasattr(self, 'client'):
             self.client.__del__()
@@ -101,7 +164,6 @@ class Cerebro(list, metaclass=MetaCerebro):
                 source.stop()
 
     def __del__(self):
-
         self.stop()
 
     def __add__(self, x):
@@ -121,6 +183,7 @@ class Cerebro(list, metaclass=MetaCerebro):
         return self.remove_source(self[index].name)
 
     def get(self, name):
+        """Retrieves a data source by name."""
 
         if name not in self._source_to_index:
             raise ValueError(f'Data source {name!r} not found.')
@@ -128,6 +191,16 @@ class Cerebro(list, metaclass=MetaCerebro):
         return self[self._source_to_index[name]]
 
     def add_source(self, source):
+        """Adds a `.Source`."""
+
+        def check_start(task):
+            if task.done():
+                exception = task.exception()
+                if exception:
+                    log.error('Failed starting data source '
+                              f'{source.name}: {exception!s}')
+            else:
+                log.error(f'Timed out trying to start source {source.name}.')
 
         if not isinstance(source, Source):
             raise NotImplementedError('Only instances of Source can '
@@ -137,7 +210,8 @@ class Cerebro(list, metaclass=MetaCerebro):
                          scheduler=self.scheduler)
 
         if asyncio.iscoroutinefunction(source.start):
-            self.loop.create_task(source.start())
+            task = self.loop.create_task(source.start())
+            self.loop.call_later(5, check_start, task)
         else:
             self.loop.call_soon(source.start)
 
@@ -145,10 +219,13 @@ class Cerebro(list, metaclass=MetaCerebro):
         super().append(source)
 
     def remove_source(self, source_name):
+        """Removes a source."""
+
         source = self._source_to_index[source_name]
         self.remove(source)
 
     def _process_next(self, measurements):
+        """Processes a list of measurements from a data source."""
 
         if measurements.data == [] or measurements.data is None:
             return
@@ -167,6 +244,7 @@ class Cerebro(list, metaclass=MetaCerebro):
         result.get()
 
     def update_time_offset(self, server):
+        """Updates the internal offset with the NTP server."""
 
         try:
             ntp = ntplib.NTPClient()
