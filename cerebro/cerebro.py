@@ -14,7 +14,7 @@ import warnings
 
 import ntplib
 from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import ASYNCHRONOUS
+from influxdb_client.client.write_api import ASYNCHRONOUS, ApiException
 from rx.scheduler.eventloop import AsyncIOScheduler
 
 from sdsstools import read_yaml_file
@@ -239,9 +239,12 @@ class Cerebro(list, metaclass=MetaCerebro):
         if not bucket:
             raise ValueError('bucket is not defined.')
 
-        result = self.write_client.write(bucket=bucket,
-                                         record=measurements.data)
-        result.get()
+        try:
+            result = self.write_client.write(bucket=bucket,
+                                             record=measurements.data)
+            result.get()
+        except ApiException as ee:
+            log.error(f'Failed writing to bucket {bucket}: {ee}')
 
     def update_time_offset(self, server):
         """Updates the internal offset with the NTP server."""
