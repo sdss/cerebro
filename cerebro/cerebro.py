@@ -91,6 +91,11 @@ class Cerebro(list, metaclass=MetaCerebro):
     ntp_server : str
         The route to the NTP server to use. The server is queried every hour
         to determine the offset between the NTP pool and the local computer.
+    logfile : str
+        If set, the path where to write the file log. Otherwise logs only to
+        stdout/stderr.
+    log_rotate : bool
+        Whether to rotate the log file at midnight UTC.
 
     """
 
@@ -127,7 +132,12 @@ class Cerebro(list, metaclass=MetaCerebro):
 
     def __init__(self, name, url='http://localhost:9999', token=None, org=None,
                  default_bucket=None, tags={}, sources=[], config=None,
-                 ntp_server='us.pool.ntp.org'):
+                 ntp_server='us.pool.ntp.org', logfile=None, log_rotate=True):
+
+        if logfile:
+            if os.path.isdir(logfile) and os.path.exists(logfile):
+                logfile = os.path.join(logfile, f'{name}.log')
+            log.start_file_logger(logfile, rotate=log_rotate)
 
         self.name = name
         self.default_bucket = default_bucket

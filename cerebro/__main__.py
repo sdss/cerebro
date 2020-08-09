@@ -51,9 +51,11 @@ def cerebro():
 
 @cerebro.group(cls=DaemonGroup, prog='daemon', workdir=CWD, pidfile=pidfile)
 @click.option('--config', type=click.Path(exists=True, dir_okay=False),
-              help='Absolute path to configuration file.')
+              help='Absolute path to config file. Defaults to sdsscore.')
+@click.option('--logfile', help='Absolute path to log file.')
+@click.option('--no-log-rotate', is_flag=True, help='Do not rotate the log.')
 @cli_coro(debug=True)
-async def daemon(config):
+async def daemon(config, logfile, no_log_rotate):
     """Handle the daemon."""
 
     if not config:
@@ -61,6 +63,9 @@ async def daemon(config):
                   os.environ['OBSERVATORY'].lower() / 'cerebro.yaml')
     else:
         config = os.path.realpath(config)
+
+    if logfile == 'default':
+        logfile = '/data/logs/cerebro/'  # The name will be added in Cerebro.
 
     cerebro = Cerebro(config=config)
 
