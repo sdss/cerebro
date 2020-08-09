@@ -264,10 +264,11 @@ class Cerebro(list, metaclass=MetaCerebro):
         if measurements.data == [] or measurements.data is None:
             return
 
+        meas_time = int((time.time() + self._offset / 1e3) * 1e9)
         for point in measurements.data:
             if 'time' not in point:
                 # Time is in nanoseconds since UNIX epoch.
-                point['time'] = int((time.time() + self._offset / 1e3) * 1e9)
+                point['time'] = meas_time
 
         bucket = measurements.bucket or self.default_bucket
         if not bucket:
