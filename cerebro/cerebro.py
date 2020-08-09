@@ -9,6 +9,7 @@
 import asyncio
 import os
 import pathlib
+import socket
 import time
 import warnings
 
@@ -39,6 +40,11 @@ class Cerebro(list, metaclass=MetaCerebro):
     Creates an `RX <https://rxpy.readthedocs.io/en/latest/>`__ observer that
     monitors a list of data sources.
 
+    name : str
+        The name of this Cerebro instance. This value is added as the
+        ``cerebro`` tag to all measurements processed. The name can be used
+        to identify the origin of the data when multiple instances of Cerebro
+        are loading data to the database.
     url : str
         The port-qualified URL of the InfluxDB v2 database. Defaults to
         ``http://localhost:9999``.
@@ -119,10 +125,11 @@ class Cerebro(list, metaclass=MetaCerebro):
 
         return args, config
 
-    def __init__(self, url='http://localhost:9999', token=None, org=None,
+    def __init__(self, name, url='http://localhost:9999', token=None, org=None,
                  default_bucket=None, tags={}, sources=[], config=None,
                  ntp_server='us.pool.ntp.org'):
 
+        self.name = name
         self.default_bucket = default_bucket
 
         if token is None:
@@ -131,6 +138,11 @@ class Cerebro(list, metaclass=MetaCerebro):
             else:
                 raise ValueError('Token not provided or '
                                  'found in INFLUXDB_V2_TOKEN')
+
+        # Add the name of the instance and the host to the default tags.
+        tags = tags.copy()
+        host = socket.getfqdn()
+        tags.update({'cerebro': self.name, 'cerebro_host': host})
 
         # Establish connection to InfluxDB
         self.client = InfluxDBClient(url=url, token=token, org=org,
