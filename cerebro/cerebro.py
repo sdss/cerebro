@@ -137,7 +137,7 @@ class Cerebro(list, metaclass=MetaCerebro):
         if logfile:
             if os.path.isdir(logfile) and os.path.exists(logfile):
                 logfile = os.path.join(logfile, f'{name}.log')
-            log.start_file_logger(logfile, rotate=log_rotate)
+            log.start_file_logger(logfile, rotating=log_rotate)
 
         self.name = name
         self.default_bucket = default_bucket
