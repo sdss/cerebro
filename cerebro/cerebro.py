@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import datetime
 import os
 import pathlib
 import socket
@@ -135,15 +136,22 @@ class Cerebro(list, metaclass=MetaCerebro):
                  default_bucket=None, tags={}, sources=[], config=None,
                  ntp_server='us.pool.ntp.org', logfile=None, log_rotate=True):
 
+        self.name = name
+        self.default_bucket = default_bucket
+
+        self.run_id = str(uuid.uuid4())
+
+        host = socket.getfqdn()
+
         if logfile:
             if os.path.isdir(logfile) and os.path.exists(logfile):
                 logfile = os.path.join(logfile, f'{name}.log')
             log.start_file_logger(logfile, rotating=log_rotate)
 
-        self.name = name
-        self.default_bucket = default_bucket
+        start_time = datetime.datetime.utcnow().isoformat()
 
-        self.run_id = str(uuid.uuid4())
+        log.debug(f'Starting Cerebro at {start_time} on host {host} '
+                  f'with run_id={self.run_id!r}')
 
         if token is None:
             if 'INFLUXDB_V2_TOKEN' in os.environ:
@@ -154,7 +162,6 @@ class Cerebro(list, metaclass=MetaCerebro):
 
         # Add the name of the instance and the host to the default tags.
         tags = tags.copy()
-        host = socket.getfqdn()
         tags.update({'cerebro': self.name,
                      'cerebro_host': host,
                      'run_id': self.run_id})
