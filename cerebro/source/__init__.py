@@ -8,3 +8,4 @@
 
 from .source import Source, get_source_subclass
 from .tron import TronSource
+from .ieb import IEBSource

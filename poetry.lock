@@ -630,6 +630,25 @@ version = "2.6.1"
 
 [[package]]
 category = "main"
+description = "A fully featured modbus protocol stack in python"
+name = "pymodbus"
+optional = false
+python-versions = "*"
+version = "2.3.0"
+
+[package.dependencies]
+pyserial = ">=3.4"
+six = ">=1.11.0"
+
+[package.extras]
+documents = ["sphinx (>=1.1.3)", "sphinx-rtd-theme", "humanfriendly"]
+quality = ["coverage (>=3.5.3)", "nose (>=1.2.1)", "mock (>=1.0.0)", "pep8 (>=1.3.3)"]
+repl = ["click (>=6.7)", "prompt-toolkit (2.0.4)", "pygments (2.2.0)"]
+tornado = ["tornado (>=4.5.3)"]
+twisted = ["twisted (>=12.2.0)", "pyasn1 (>=0.1.4)"]
+
+[[package]]
+category = "main"
 description = "Python parsing module"
 name = "pyparsing"
 optional = false
@@ -646,6 +665,14 @@ version = "0.16.0"
 
 [package.dependencies]
 six = "*"
+
+[[package]]
+category = "main"
+description = "Python Serial Port Extension"
+name = "pyserial"
+optional = false
+python-versions = "*"
+version = "3.4"
 
 [[package]]
 category = "dev"
@@ -796,6 +823,22 @@ docs = ["Sphinx (>=2.3)"]
 reference = ""
 type = "directory"
 url = "../clu"
+
+[[package]]
+category = "main"
+description = "Modbus PLC control library"
+name = "sdss-drift"
+optional = false
+python-versions = ">=3.7,<4.0"
+version = "0.1.3"
+
+[package.dependencies]
+pymodbus = ">=2.3.0,<3.0.0"
+pyyaml = ">=5.3.1,<6.0.0"
+sdsstools = {version = ">=0.1.9", extras = ["dev"]}
+
+[package.extras]
+docs = ["Sphinx (>=2.2.0)"]
 
 [[package]]
 category = "main"
@@ -1041,7 +1084,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 docs = ["Sphinx"]
 
 [metadata]
-content-hash = "8c056e6461cb5b0ef9760dff6b7cac8b416bbc9b1ef6f2ea78de9a1bc28ce3e3"
+content-hash = "379d0d5e3f32a0750fd1bd78672c3d85e5bd93a1fbec433601f8ec02b6b5414b"
 lock-version = "1.1"
 python-versions = "^3.7"
 
@@ -1445,12 +1488,20 @@ pygments = [
     {file = "Pygments-2.6.1-py3-none-any.whl", hash = "sha256:ff7a40b4860b727ab48fad6360eb351cc1b33cbf9b15a0f689ca5353e9463324"},
     {file = "Pygments-2.6.1.tar.gz", hash = "sha256:647344a061c249a3b74e230c739f434d7ea4d8b1d5f3721bc0f3558049b38f44"},
 ]
+pymodbus = [
+    {file = "pymodbus-2.3.0-py2.py3-none-any.whl", hash = "sha256:17acbd7b4e57357c71c25a37f03d07fe2fcd4dba19c95b4c0c2621b9f0a8f34f"},
+    {file = "pymodbus-2.3.0.tar.gz", hash = "sha256:8e59d49cdc3f9df8e90fa004baa4aae94814b9ecf1fc03620b1d67234896c444"},
+]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
 ]
 pyrsistent = [
     {file = "pyrsistent-0.16.0.tar.gz", hash = "sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3"},
+]
+pyserial = [
+    {file = "pyserial-3.4-py2.py3-none-any.whl", hash = "sha256:e0770fadba80c31013896c7e6ef703f72e7834965954a78e71a3049488d4d7d8"},
+    {file = "pyserial-3.4.tar.gz", hash = "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627"},
 ]
 pytest = [
     {file = "pytest-6.0.1-py3-none-any.whl", hash = "sha256:8b6007800c53fdacd5a5c192203f4e531eb2a1540ad9c752e052ec0f7143dbad"},
@@ -1499,6 +1550,10 @@ rx = [
     {file = "Rx-3.1.1.tar.gz", hash = "sha256:562851cfdb27fd5a218443cdbd682029684144dbafeb5dce34f6a709511282de"},
 ]
 sdss-clu = []
+sdss-drift = [
+    {file = "sdss-drift-0.1.3.tar.gz", hash = "sha256:e1dee789c0e4f5c5fa4260ef79ce97ecb0abde7c836cb5a1dbb711f4aaece283"},
+    {file = "sdss_drift-0.1.3-py3-none-any.whl", hash = "sha256:7693fe9f073ec59eea2918181174b22c9dd96d73035dc7621cadbdf5dce5590e"},
+]
 sdsstools = [
     {file = "sdsstools-0.4.0-py3-none-any.whl", hash = "sha256:65185db1620c5a59b8698489112055398564b51bd27e1f58904ac68c0c6a1fd2"},
     {file = "sdsstools-0.4.0.tar.gz", hash = "sha256:5b0754ab25c55d2e7b2da503403f0b941db01deb07aa37062c29b4402a5eb8d5"},
