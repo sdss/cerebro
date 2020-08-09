@@ -11,6 +11,7 @@ import os
 import pathlib
 import socket
 import time
+import uuid
 import warnings
 
 import ntplib
@@ -142,6 +143,8 @@ class Cerebro(list, metaclass=MetaCerebro):
         self.name = name
         self.default_bucket = default_bucket
 
+        self.run_id = str(uuid.uuid4())
+
         if token is None:
             if 'INFLUXDB_V2_TOKEN' in os.environ:
                 token = os.environ['INFLUXDB_V2_TOKEN']
@@ -152,7 +155,9 @@ class Cerebro(list, metaclass=MetaCerebro):
         # Add the name of the instance and the host to the default tags.
         tags = tags.copy()
         host = socket.getfqdn()
-        tags.update({'cerebro': self.name, 'cerebro_host': host})
+        tags.update({'cerebro': self.name,
+                     'cerebro_host': host,
+                     'run_id': self.run_id})
 
         # Establish connection to InfluxDB
         self.client = InfluxDBClient(url=url, token=token, org=org,
