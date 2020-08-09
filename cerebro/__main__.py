@@ -24,6 +24,9 @@ from cerebro import Cerebro
 nest_asyncio.apply()
 
 
+CWD = os.getcwd()
+
+
 # This changes the root logger level to DEBUG so that asyncio silent
 # exceptions are propagated. Since the sdsstools logger has its own level
 # control this should not affect it.
@@ -33,9 +36,7 @@ if os.environ.get('PYTHONASYNCIODEBUG', '0') != '0':
     logging.basicConfig(level=logging.DEBUG)
 
 
-if sys.platform == 'linux' or sys.platform == 'linux2':
-    pidfile = '/var/run/cerebro.pid'
-elif sys.platform == 'darwin':
+if sys.platform in ['linux', 'linux2', 'darwin']:
     pidfile = '/var/tmp/cerebro.pid'
 else:
     raise RuntimeError('Cannot run cerebro in Windows.')
@@ -48,9 +49,9 @@ def cerebro():
     pass
 
 
-@cerebro.group(cls=DaemonGroup, prog='daemon', pidfile=pidfile)
+@cerebro.group(cls=DaemonGroup, prog='daemon', workdir=CWD, pidfile=pidfile)
 @click.option('--config', type=click.Path(exists=True, dir_okay=False),
-              help='Path to configuration file.')
+              help='Absolute path to configuration file.')
 @cli_coro(debug=True)
 async def daemon(config):
     """Handle the daemon."""
@@ -58,6 +59,8 @@ async def daemon(config):
     if not config:
         config = (pathlib.Path(os.environ['SDSSCORE_DIR']) / 'configuration' /
                   os.environ['OBSERVATORY'].lower() / 'cerebro.yaml')
+    else:
+        config = os.path.realpath(config)
 
     cerebro = Cerebro(config=config)
 
