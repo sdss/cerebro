@@ -49,6 +49,7 @@ class TronSource(Source):
     """
 
     source_type = 'tron'
+    timout = 60
 
     def __init__(self, name, bucket=None, tags={},
                  actors=[], host='localhost', port=6093, keywords=None):

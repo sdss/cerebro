@@ -63,6 +63,9 @@ class Source(Subject):
     #: str: The type of data source.
     source_type = None
 
+    #: float: Seconds to wait for initialisation.
+    timout = None
+
     def __init__(self, name, bucket=None, tags={}):
 
         if self.source_type is None:
