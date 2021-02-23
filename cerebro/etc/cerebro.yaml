@@ -1,0 +1,28 @@
+name: cerebro
+ntp_server: us.pool.ntp.org
+logfile: /data/logs/cerebro/cerebro.log
+
+tags:
+  observatory: ${OBSERVATORY}
+
+sources:
+  tron:
+    type: tron
+    bucket: Actors
+    host: localhost
+    port: 6093
+    actors:
+      - tcc
+      - apo
+  uw_sextant:
+    type: ieb
+    bucket: IEB
+    config: ${SDSSCORE_DIR}/configuration/apo/iebs/sextant.yaml
+
+observers:
+  influxdb:
+    type: influxdb
+    url: http://localhost:9999
+    token: null
+    org: SDSS
+    default_bucket: Actors
