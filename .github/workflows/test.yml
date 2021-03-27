@@ -51,7 +51,7 @@ jobs:
       - name: Lint with isort
         run: |
           pip install isort
-          isort -c archon
+          isort -c cerebro
 
       - name: Run type checking
         continue-on-error: true
