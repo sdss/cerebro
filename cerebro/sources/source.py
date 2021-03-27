@@ -6,31 +6,33 @@
 # @Filename: source.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import asyncio
 import collections
+
+from typing import Any, Optional, Type
 
 import rx
 from rx.disposable import Disposable
 from rx.subject import Subject
 
 
-__all__ = ['DataPoints', 'wrap_async_observable', 'Source',
-           'get_source_subclass']
+__all__ = ["DataPoints", "wrap_async_observable", "Source", "get_source_subclass"]
 
 
-DataPoints = collections.namedtuple('DataPoints', ('bucket', 'data'))
+DataPoints = collections.namedtuple("DataPoints", ("bucket", "data"))
 
 
 def wrap_async_observable(observable, *args, **kwargs):
     """Wraps a coroutine and creates an observable."""
 
     if not asyncio.iscoroutinefunction(observable):
-        raise TypeError('Observable must be a coroutine function.')
+        raise TypeError("Observable must be a coroutine function.")
 
     def on_subscribe(observer, scheduler):
-        task = asyncio.create_task(observable(observer, scheduler,
-                                              *args, **kwargs))
-        return Disposable(task.cancel)
+        task = asyncio.create_task(observable(observer, scheduler, *args, **kwargs))
+        return Disposable(task.cancel)  # type: ignore
 
     return rx.create(on_subscribe)
 
@@ -51,25 +53,30 @@ class Source(Subject):
 
     Parameters
     ----------
-    name : str
+    name
         The name of the data source.
-    bucket : str
+    bucket
         The bucket to write to. If not set it will use the default bucket.
-    tags : dict
+    tags
         A dictionary of tags to be associated with all measurements.
 
     """
 
     #: str: The type of data source.
-    source_type = None
+    source_type: Optional[str] = None
 
     #: float: Seconds to wait for initialisation.
-    timout = None
+    timout: Optional[float] = None
 
-    def __init__(self, name, bucket=None, tags={}):
+    def __init__(
+        self,
+        name: str,
+        bucket: Optional[str] = None,
+        tags: Optional[dict[str, Any]] = {},
+    ):
 
         if self.source_type is None:
-            raise ValueError('Subclasses must override source_type.')
+            raise ValueError("Subclasses must override source_type.")
 
         super().__init__()
 
@@ -77,11 +84,11 @@ class Source(Subject):
         self.bucket = bucket
 
         self.tags = tags.copy()
-        self.tags.update({'source': self.source_type})
+        self.tags.update({"source": self.source_type})
 
         self.loop = asyncio.get_event_loop()
 
-    def start(self):
+    async def start(self):
         """Initialises the source.
 
         This method is called by `.Cerebro` when the data source is added. It
@@ -99,7 +106,7 @@ class Source(Subject):
         pass
 
 
-def get_source_subclass(type_):
+def get_source_subclass(type_: str) -> Type[Source] | None:
     """Returns a `.Source` subclass based on its ``data_type``."""
 
     for subclass in Source.__subclasses__():

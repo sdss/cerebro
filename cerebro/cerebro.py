@@ -6,6 +6,8 @@
 # @Filename: cerebro.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import abc
 import asyncio
 import datetime
@@ -16,6 +18,8 @@ import time
 import uuid
 import warnings
 
+from typing import Any, Optional
+
 import ntplib
 from rx.scheduler.eventloop import AsyncIOScheduler
 from rx.subject import Subject
@@ -23,8 +27,8 @@ from rx.subject import Subject
 from sdsstools import read_yaml_file
 
 from . import log
-from .observer import get_observer_subclass
-from .source import Source, get_source_subclass
+from .observer import Observer, get_observer_subclass
+from .sources import Source, get_source_subclass
 
 
 class SourceList(list):
@@ -62,10 +66,10 @@ class SourceList(list):
         self.stop()
 
     def __add__(self, x):
-        raise NotImplementedError('Addition is not implemented.')
+        raise NotImplementedError("Addition is not implemented.")
 
     def insert(self, *args):
-        raise NotImplementedError('Insert is not implemented.')
+        raise NotImplementedError("Insert is not implemented.")
 
     def remove(self, source):
         source.dispose()
@@ -81,30 +85,32 @@ class SourceList(list):
         """Retrieves a data source by name."""
 
         if name not in self._source_to_index:
-            raise ValueError(f'Data source {name!r} not found.')
+            raise ValueError(f"Data source {name!r} not found.")
 
         return self[self._source_to_index[name]]
 
-    def add_source(self, source):
+    def add_source(self, source: Source):
         """Adds a `.Source`."""
 
         def check_start(task):
             if task.done():
                 exception = task.exception()
                 if exception:
-                    log.error('Failed starting data source '
-                              f'{source.name}: {exception!s}')
+                    log.error(
+                        "Failed starting data source " f"{source.name}: {exception!s}"
+                    )
             else:
-                log.error(f'Timed out trying to start source {source.name}.')
+                log.error(f"Timed out trying to start source {source.name}.")
 
         if not isinstance(source, Source):
-            raise NotImplementedError('Only instances of Source can '
-                                      'be passed at this point.')
+            raise NotImplementedError(
+                "Only instances of Source can " "be passed at this point."
+            )
 
         source.subscribe(on_next=self.on_next, scheduler=self.scheduler)
 
         if asyncio.iscoroutinefunction(source.start):
-            timeout = getattr(source, 'timout', 10.)
+            timeout = getattr(source, "timout", 10.0)
             task = self.loop.create_task(source.start())
             self.loop.call_later(timeout, check_start, task)
         else:
@@ -125,7 +131,7 @@ class Cerebellum(type):
 
     def __call__(cls, *args, **kwargs):
         args, kwargs = cls.__parse_config__(*args, **kwargs)
-        obj = cls.__new__(cls)
+        obj = cls()
         obj.__init__(*args, **kwargs)
         return obj
 
@@ -133,40 +139,40 @@ class Cerebellum(type):
     def __parse_config__(*args, **kwargs):
         """Overrides initialisation parameters from a configuration file."""
 
-        if kwargs.get('config', None) is None:
+        if kwargs.get("config", None) is None:
             return args, kwargs
 
         # Remove input sources and observers.
-        kwargs.pop('sources', None)
-        kwargs.pop('observers', None)
+        kwargs.pop("sources", None)
+        kwargs.pop("observers", None)
 
-        config_file = kwargs.pop('config')
+        config_file = kwargs.pop("config")
         if isinstance(config_file, (str, pathlib.Path)):
             config = read_yaml_file(config_file)
         elif isinstance(config_file, dict):
             config = config_file.copy()
         else:
-            raise ValueError(f'Invalid type {type(config_file)} for config.')
+            raise ValueError(f"Invalid type {type(config_file)} for config.")
         config.update(kwargs)
 
         sources = []
-        for source_name, params in config.pop('sources', {}).items():
-            type_ = params.pop('type')
+        for source_name, params in config.pop("sources", {}).items():
+            type_ = params.pop("type")
             Subclass = get_source_subclass(type_)
             if Subclass is None:
-                raise ValueError(f'Source type {type_} is not valid.')
+                raise ValueError(f"Source type {type_} is not valid.")
             sources.append(Subclass(source_name, **params))
 
         observers = []
-        for observer_name, params in config.pop('observers', {}).items():
-            type_ = params.pop('type')
+        for observer_name, params in config.pop("observers", {}).items():
+            type_ = params.pop("type")
             Subclass = get_observer_subclass(type_)
             if Subclass is None:
-                raise ValueError(f'Writer type {type_} is not valid.')
+                raise ValueError(f"Writer type {type_} is not valid.")
             observers.append(Subclass(observer_name, **params))
 
-        config['sources'] = sources
-        config['observers'] = observers
+        config["sources"] = sources
+        config["observers"] = observers
 
         return args, config
 
@@ -188,16 +194,16 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
     Parameters
     ----------
-    name : str
+    name
         The name of this Cerebro instance. This value is added as the
         ``cerebro`` tag to all measurements processed. The name can be used
         to identify the origin of the data when multiple instances of Cerebro
         are loading data to the database.
-    tags : dictionary
+    tags
         A list of tags to add to all the measurements.
-    sources : list
+    sources
         A list of `.Source` instances to listen to.
-    config : dict or str
+    config
         A file or dictionary from which to load the configuration. The format
         exactly follows the signature of `.Cerebro` and the data sources it
         refers to. For example:
@@ -229,19 +235,28 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         to the ``source_type`` and ``observer_type`` value of the `.Source`
         and `.Writer` subclass to be used, respectively. If ``config`` is
         defined, ``sources`` and ``observers`` are ignored.
-    ntp_server : str
+    ntp_server
         The route to the NTP server to use. The server is queried every hour
         to determine the offset between the NTP pool and the local computer.
-    logfile : str
+    logfile
         If set, the path where to write the file log. Otherwise logs only to
         stdout/stderr.
-    log_rotate : bool
+    log_rotate
         Whether to rotate the log file at midnight UTC.
 
     """
 
-    def __init__(self, name, tags={}, sources=[], observers=[], config=None,
-                 ntp_server='us.pool.ntp.org', logfile=None, log_rotate=True):
+    def __init__(
+        self,
+        name: str = "cerebro",
+        tags: dict[str, Any] = {},
+        sources: list[Source] = [],
+        observers: list[Observer] = [],
+        config: Optional[str | dict | pathlib.Path] = None,
+        ntp_server: str = "us.pool.ntp.org",
+        logfile: Optional[str] = None,
+        log_rotate: bool = True,
+    ):
 
         Subject.__init__(self)
 
@@ -252,13 +267,15 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         if logfile:
             if os.path.isdir(logfile) and os.path.exists(logfile):
-                logfile = os.path.join(logfile, f'{name}.log')
+                logfile = os.path.join(logfile, f"{name}.log")
             log.start_file_logger(logfile, rotating=log_rotate)
 
         start_time = datetime.datetime.utcnow().isoformat()
 
-        log.debug(f'Starting Cerebro at {start_time} on host {host} '
-                  f'with run_id={self.run_id!r}')
+        log.debug(
+            f"Starting Cerebro at {start_time} on host {host} "
+            f"with run_id={self.run_id!r}"
+        )
 
         self.loop = asyncio.get_event_loop()
 
@@ -266,22 +283,19 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         for observer in observers:
             observer.set_cerebro(self)
-            log.debug(f'Added observer of type {observer.observer_type}.')
+            log.debug(f"Added observer of type {observer.observer_type}.")
 
         # Add the name of the instance and the host to the default tags.
         self.tags = tags.copy()
-        self.tags.update({'cerebro': self.name,
-                          'cerebro_host': host,
-                          'run_id': self.run_id})
+        self.tags.update(
+            {"cerebro": self.name, "cerebro_host": host, "run_id": self.run_id}
+        )
 
         self._offset = 0
         self.loop.call_soon(self.update_time_offset, ntp_server)
 
     def stop(self):
         """Stops the InfluxDB client and all the sources."""
-
-        for observer in self.observers:
-            observer.stop()
 
         self.sources.stop()
 
@@ -309,15 +323,15 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         meas_time = int((time.time() + self._offset / 1e3) * 1e9)
         for point in data.data:
-            if 'time' not in point:
+            if "time" not in point:
                 # Time is in nanoseconds since UNIX epoch.
-                point['time'] = meas_time
-            point['tags'].update(self.tags)
+                point["time"] = meas_time
+            point["tags"].update(self.tags)
 
         # Propagate to all the observers.
         Subject.on_next(self, data)
 
-    def update_time_offset(self, server):
+    def update_time_offset(self, server: str):
         """Updates the internal offset with the NTP server."""
 
         try:
@@ -326,7 +340,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
             if offset:
                 self._offset = offset
         except Exception as ee:
-            warnings.warn(f'Failed updating offset from NTP server: {ee}',
-                          UserWarning)
+            warnings.warn(f"Failed updating offset from NTP server: {ee}", UserWarning)
 
-        self.loop.call_later(3600., self.update_time_offset, server)
+        self.loop.call_later(3600.0, self.update_time_offset, server)

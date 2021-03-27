@@ -6,7 +6,6 @@
 # @Filename: __main__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-import logging
 import os
 import pathlib
 import sys
@@ -27,37 +26,31 @@ nest_asyncio.apply()
 CWD = os.getcwd()
 
 
-# This changes the root logger level to DEBUG so that asyncio silent
-# exceptions are propagated. Since the sdsstools logger has its own level
-# control this should not affect it.
-# See https://docs.python.org/3/library/asyncio-dev.html#asyncio-debug-mode
-# asyncio_log = logging.getLogger('asyncio')
-if os.environ.get('PYTHONASYNCIODEBUG', '0') != '0':
-    logging.basicConfig(level=logging.DEBUG)
-
-
-if sys.platform in ['linux', 'linux2', 'darwin']:
-    pidfile = '/var/tmp/cerebro.pid'
+if sys.platform in ["linux", "linux2", "darwin"]:
+    pidfile = "/var/tmp/cerebro.pid"
 else:
-    raise RuntimeError('Cannot run cerebro in Windows.')
+    raise RuntimeError("Cannot run cerebro in Windows.")
 
 
-@click.group(cls=DefaultGroup, default='daemon', default_if_no_args=True)
+@click.group(cls=DefaultGroup, default="daemon", default_if_no_args=True)
 def cerebro():
     """Command Line Interface for cerebro."""
 
     pass
 
 
-@cerebro.group(cls=DaemonGroup, prog='daemon', workdir=CWD, pidfile=pidfile)
-@click.option('--config', type=click.Path(exists=True, dir_okay=False),
-              help='Absolute path to config file. Defaults to internal config.')
-@cli_coro(debug=True)
+@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=CWD, pidfile=pidfile)
+@click.option(
+    "--config",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Absolute path to config file. Defaults to internal config.",
+)
+@cli_coro()
 async def daemon(config, logfile, no_log_rotate):
     """Handle the daemon."""
 
     if not config:
-        config = (pathlib.Path(__file__).parent / 'etc' / 'cerebro.yaml')
+        config = pathlib.Path(__file__).parent / "etc" / "cerebro.yaml"
     else:
         config = os.path.realpath(config)
 
@@ -74,5 +67,5 @@ def main():
     cerebro()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

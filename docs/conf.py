@@ -9,33 +9,40 @@ from cerebro import __version__
 
 
 # Are we building in RTD?
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # matplotlib.use('agg')
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
-              'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx', 'sdsstools.releases']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.intersphinx",
+    "sdsstools.releases",
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 source_parsers = {
     # '.md': 'recommonmark.parser.CommonMarkParser',
 }
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'cerebro'
-copyright = '{0}, {1}'.format('2020', 'José Sánchez-Gallego')
-author = 'José Sánchez-Gallego'
+project = "cerebro"
+copyright = "{0}, {1}".format("2020", "José Sánchez-Gallego")
+author = "José Sánchez-Gallego"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -56,11 +63,11 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-default_role = 'py:obj'
+default_role = "py:obj"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
@@ -74,7 +81,7 @@ add_module_names = True
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -85,23 +92,22 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = 'sdss/cerebro'
-releases_document_name = ['changelog']
+releases_github_path = "sdss/cerebro"
+releases_document_name = ["changelog"]
 releases_unstable_prehistory = True
 
 # Intersphinx mappings
-intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
-                       'numpy': ('http://docs.scipy.org/doc/numpy/', None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3.7", None),
+    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+}
 # 'astropy': ('http://docs.astropy.org/en/latest', None),
 # 'matplotlib': ('https://matplotlib.org/', None),
 # 'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
 
-autodoc_mock_imports = ['_tkinter']
-autodoc_member_order = 'groupwise'
-autodoc_default_options = {
-    'members': None,
-    'show-inheritance': None
-}
+autodoc_mock_imports = ["_tkinter"]
+autodoc_member_order = "groupwise"
+autodoc_default_options = {"members": None, "show-inheritance": None}
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True
@@ -115,22 +121,22 @@ rst_epilog = f"""
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = "alabaster"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'logo': 'sdssv_logo.png',
-    'github_user': 'sdss',
-    'github_repo': 'cerebro',
-    'github_button': True,
-    'github_type': 'star',
-    'sidebar_collapse': True,
-    'page_width': '80%'
+    "logo": "sdssv_logo.png",
+    "github_user": "sdss",
+    "github_repo": "cerebro",
+    "github_button": True,
+    "github_type": "star",
+    "sidebar_collapse": True,
+    "page_width": "80%",
 }
 
-html_favicon = './_static/favicon.ico'
+html_favicon = "./_static/favicon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -140,14 +146,14 @@ html_favicon = './_static/favicon.ico'
 if on_rtd:
     html_static_path = []
 else:
-    html_static_path = ['_static']
+    html_static_path = ["_static"]
 
 # Sidebar templates
 html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',
-        'searchbox.html',
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",
+        "searchbox.html",
     ]
 }

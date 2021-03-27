@@ -20,9 +20,7 @@ classifiers = [
 packages = [
     { include = "cerebro" }
 ]
-include = [
-    {path = "LICENSE.md"}
-]
+include = ["cerebro/etc/*"]
 
 [tool.poetry.scripts]
 cerebro = "cerebro.__main__:main"
@@ -54,18 +52,22 @@ isort = ">=4.3.21"
 codecov = ">=2.0.15"
 coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
+black = {version = "^20.8b1", allow-prereleases = true}
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+# skip-string-normalization = true
+fast = true
 
 [tool.isort]
-line_length = 79
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
+profile = "black"
+sections = ["FUTURE", "STDLIB", "TYPING", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
 default_section = "THIRDPARTY"
-known_first_party = ["cerebro"]
-known_sdss = ["sdsstools", "drift", "clu"]
-# multi_line_output = false
-balanced_wrapping = true
-include_trailing_comma = false
+known_first_party = "archon"
+known_typing = ["typing"]
+known_sdss = ["sdsstools", "clu", "drift"]
 lines_after_imports = 2
-use_parentheses = true
 
 [tool.pytest.ini_options]
 addopts = "--cov cerebro --cov-report xml --cov-report html --cov-report term"

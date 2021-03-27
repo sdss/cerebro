@@ -8,6 +8,8 @@
 
 import warnings
 
+from typing import Any, Optional
+
 import numpy
 
 from clu.legacy import TronConnection
@@ -30,29 +32,37 @@ class TronSource(Source):
 
     Parameters
     ----------
-    name : str
+    name
         The name of the data source.
-    bucket : str
+    bucket
         The bucket to write to. If not set it will use the default bucket.
-    tags : dict
+    tags
         A dictionary of tags to be associated with all measurements.
-    actors : list
+    actors
         A list of actor names to monitor.
-    host : str
+    host
         The host on which to connect to Tron.
-    port : int
+    port
         The port on which Tron is running.
-    keywords : dict
+    keywords
         A list of keywords to monitor for a given actor. If `None`, all
         keywords are monitored and recorded.
 
     """
 
-    source_type = 'tron'
+    source_type = "tron"
     timout = 60
 
-    def __init__(self, name, bucket=None, tags={},
-                 actors=[], host='localhost', port=6093, keywords=None):
+    def __init__(
+        self,
+        name: str,
+        bucket: Optional[str] = None,
+        tags: dict[str, Any] = {},
+        actors: list[str] = [],
+        host: str = "localhost",
+        port: int = 6093,
+        keywords: Optional[list[str]] = None,
+    ):
 
         super().__init__(name, bucket=bucket, tags=tags)
 
@@ -60,7 +70,9 @@ class TronSource(Source):
         self.keywords = keywords
 
         for model in self.tron.models:
-            self.tron.models[model].register_callback(self.process_keyword)
+            self.tron.models[model].register_callback(
+                self.process_keyword
+            )  # type: ignore
 
     async def start(self):
         """Starts the connection to Tron."""
@@ -93,34 +105,36 @@ class TronSource(Source):
         ii = 0
         for key_value in key.values:
 
-            if hasattr(key_value, 'name') and key_value.name:
-                key_name = f'_{key_value.name}'
+            if hasattr(key_value, "name") and key_value.name:
+                key_name = f"_{key_value.name}"
             elif len(key.values) == 1:
-                key_name = ''
+                key_name = ""
             else:
-                key_name = f'_{ii}'
+                key_name = f"_{ii}"
 
             tags = self.tags.copy()
-            if hasattr(key_value, 'units'):
-                tags.update({'units': key_value.units})
+            if hasattr(key_value, "units"):
+                tags.update({"units": key_value.units})
 
             native = key_value.native
             if isinstance(native, (list, tuple, numpy.ndarray)):
-                if key_value.__class__.__name__ == 'PVT':
-                    fields = {f'{name}{key_name}_P': native[0],
-                              f'{name}{key_name}_V': native[1],
-                              f'{name}{key_name}_T': native[2]}
+                if key_value.__class__.__name__ == "PVT":
+                    fields = {
+                        f"{name}{key_name}_P": native[0],
+                        f"{name}{key_name}_V": native[1],
+                        f"{name}{key_name}_T": native[2],
+                    }
                 else:
-                    warnings.warn(f'Cannot parse {actor}.{name!r} '
-                                  f'of type {type(native)!r}.', UserWarning)
+                    warnings.warn(
+                        f"Cannot parse {actor}.{name!r} of type {type(native)!r}.",
+                        UserWarning,
+                    )
                     continue
 
             else:
-                fields = {f'{name}{key_name}': native}
+                fields = {f"{name}{key_name}": native}
 
-            points.append({'measurement': actor,
-                           'tags': self.tags,
-                           'fields': fields})
+            points.append({"measurement": actor, "tags": self.tags, "fields": fields})
 
             ii += 1
 
