@@ -7,5 +7,6 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 from .ieb import IEBSource
+from .lvm import GoveeSource
 from .source import Source, get_source_subclass
 from .tron import TronSource
