@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 
 from typing import Any, NamedTuple, Optional, Type
 
@@ -68,7 +67,7 @@ class Source(Subject):
     source_type: Optional[str] = None
 
     #: float: Seconds to wait for initialisation.
-    timout: Optional[float] = None
+    timeout: float = 10
 
     def __init__(
         self,
