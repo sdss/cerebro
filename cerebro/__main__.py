@@ -30,13 +30,6 @@ else:
 
 
 @click.group(cls=DefaultGroup, default="daemon", default_if_no_args=True)
-def cerebro():
-    """Command Line Interface for cerebro."""
-
-    pass
-
-
-@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=os.getcwd(), pidfile=pidfile)
 @click.option(
     "--sources",
     type=str,
@@ -47,9 +40,9 @@ def cerebro():
     type=click.Path(exists=True, dir_okay=False),
     help="Absolute path to config file. Defaults to internal config.",
 )
-@cli_coro()
-async def daemon(sources, config):
-    """Handle the daemon."""
+@click.pass_context
+def cerebro(ctx, sources, config):
+    """Command Line Interface for cerebro."""
 
     if not config:
         config = pathlib.Path(__file__).parent / "etc" / "cerebro.yaml"
@@ -58,7 +51,16 @@ async def daemon(sources, config):
 
     sources = sources.split(",") if sources else []
 
-    cerebro = Cerebro(config=config, sources=sources)
+    ctx.obj = {'sources': sources, 'config': config}
+
+
+@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=os.getcwd(), pidfile=pidfile)
+@cli_coro()
+@click.pass_context
+async def daemon(ctx):
+    """Handle the daemon."""
+
+    cerebro = Cerebro(config=ctx.obj['config'], sources=ctx.obj['sources'])
 
     try:
         cerebro.loop.run_forever()
@@ -68,7 +70,7 @@ async def daemon(sources, config):
 
 
 def main():
-    cerebro()
+    cerebro(obj={})
 
 
 if __name__ == "__main__":
