@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import collections
 
-from typing import Any, Optional, Type
+from typing import Any, NamedTuple, Optional, Type
 
 import rx
 from rx.disposable import Disposable
@@ -21,7 +21,9 @@ from rx.subject import Subject
 __all__ = ["DataPoints", "wrap_async_observable", "Source", "get_source_subclass"]
 
 
-DataPoints = collections.namedtuple("DataPoints", ("bucket", "data"))
+class DataPoints(NamedTuple):
+    bucket: str | None
+    data: list[dict[str, Any]]
 
 
 def wrap_async_observable(observable, *args, **kwargs):
