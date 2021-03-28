@@ -131,7 +131,7 @@ class Cerebellum(type):
 
     def __call__(cls, *args, **kwargs):
         args, kwargs = cls.__parse_config__(*args, **kwargs)
-        obj = cls()
+        obj = Cerebro.__new__(cls)
         obj.__init__(*args, **kwargs)
         return obj
 
