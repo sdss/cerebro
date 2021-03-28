@@ -50,10 +50,7 @@ class GoveeSource(Source):
         """Connects to the Govee server."""
 
         self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
-        self._task = asyncio.create_task(
-            self.get_measurement(),
-            name=f"{self.name}_task",
-        )
+        self._task = asyncio.create_task(self.get_measurement())
 
     async def stop(self):
         """Disconnects from server."""

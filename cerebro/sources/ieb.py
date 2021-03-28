@@ -112,7 +112,6 @@ class IEBSource(Source):
         """Schedule the monitor task for a given device."""
 
         task = asyncio.create_task(self.measure_device(device))
-        task.set_name(f"IEBSource_{self.name}_{device}")
         task.add_done_callback(self._tasks.remove)
         self._tasks.append(task)
 
