@@ -18,7 +18,7 @@ import time
 import uuid
 import warnings
 
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import ntplib
 from rx.scheduler.eventloop import AsyncIOScheduler
@@ -251,9 +251,9 @@ class Cerebro(Subject, metaclass=MetaCerebro):
     def __init__(
         self,
         name: str = "cerebro",
-        tags: dict[str, Any] = {},
-        sources: list[Source | str] = [],
-        observers: list[Observer] = [],
+        tags: Dict[str, Any] = {},
+        sources: List[Source | str] = [],
+        observers: List[Observer] = [],
         config: Optional[str | dict | pathlib.Path] = None,
         ntp_server: str = "us.pool.ntp.org",
         logfile: Optional[str] = None,

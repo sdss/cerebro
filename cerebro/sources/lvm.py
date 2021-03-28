@@ -13,6 +13,8 @@ import warnings
 from contextlib import suppress
 from datetime import datetime
 
+from typing import Dict
+
 from .source import DataPoints, Source
 
 
@@ -28,7 +30,7 @@ class GoveeSource(Source):
         name: str,
         host: str = "localhost",
         port: int = 1111,
-        devices: dict[str, str] = {},
+        devices: Dict[str, str] = {},
         **kwargs,
     ):
 

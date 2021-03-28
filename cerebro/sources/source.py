@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import Any, NamedTuple, Optional, Type
+from typing import Any, Dict, List, NamedTuple, Optional, Type
 
 import rx
 from rx.disposable import Disposable
@@ -22,7 +22,7 @@ __all__ = ["DataPoints", "wrap_async_observable", "Source", "get_source_subclass
 
 class DataPoints(NamedTuple):
     bucket: str | None
-    data: list[dict[str, Any]]
+    data: List[Dict[str, Any]]
 
 
 def wrap_async_observable(observable, *args, **kwargs):
@@ -73,7 +73,7 @@ class Source(Subject):
         self,
         name: str,
         bucket: Optional[str] = None,
-        tags: Optional[dict[str, Any]] = {},
+        tags: Optional[Dict[str, Any]] = {},
     ):
 
         if self.source_type is None:

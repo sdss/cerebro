@@ -8,7 +8,7 @@
 
 import warnings
 
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy
 
@@ -57,11 +57,11 @@ class TronSource(Source):
         self,
         name: str,
         bucket: Optional[str] = None,
-        tags: dict[str, Any] = {},
-        actors: list[str] = [],
+        tags: Dict[str, Any] = {},
+        actors: List[str] = [],
         host: str = "localhost",
         port: int = 6093,
-        keywords: Optional[list[str]] = None,
+        keywords: Optional[List[str]] = None,
     ):
 
         super().__init__(name, bucket=bucket, tags=tags)
@@ -69,10 +69,9 @@ class TronSource(Source):
         self.tron = TronConnection(host, port, models=actors)
         self.keywords = keywords
 
-        for model in self.tron.models:
-            self.tron.models[model].register_callback(
-                self.process_keyword
-            )  # type: ignore
+        for model_name in self.tron.models:
+            model = self.tron.models[model_name]
+            model.register_callback(self.process_keyword)  # type: ignore
 
     async def start(self):
         """Starts the connection to Tron."""

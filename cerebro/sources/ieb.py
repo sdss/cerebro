@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import Optional
+from typing import Dict, List, Optional
 
 from drift import Drift, Relay
 
@@ -58,9 +58,9 @@ class IEBSource(Source):
         name: str,
         ieb: Optional[Drift] = None,
         config: Optional[str] = None,
-        devices: Optional[list[str]] = None,
+        devices: Optional[List[str]] = None,
         default_delay: float = 5.0,
-        delays: dict[str, float] = {},
+        delays: Dict[str, float] = {},
         **kwargs,
     ):
 
@@ -88,7 +88,7 @@ class IEBSource(Source):
         self.delays = delays
         self.defaul_delay = default_delay
 
-        self._tasks: list[asyncio.Task] = []
+        self._tasks: List[asyncio.Task] = []
         self._lock = asyncio.Lock()
 
     async def start(self):
