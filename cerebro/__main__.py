@@ -51,7 +51,7 @@ def cerebro(ctx, sources, config):
 
     sources = sources.split(",") if sources else []
 
-    ctx.obj = {'sources': sources, 'config': config}
+    ctx.obj = {"sources": sources, "config": config}
 
 
 @cerebro.group(cls=DaemonGroup, prog="daemon", workdir=os.getcwd(), pidfile=pidfile)
@@ -60,7 +60,7 @@ def cerebro(ctx, sources, config):
 async def daemon(ctx):
     """Handle the daemon."""
 
-    cerebro = Cerebro(config=ctx.obj['config'], sources=ctx.obj['sources'])
+    cerebro = Cerebro(config=ctx.obj["config"], sources=ctx.obj["sources"])
 
     try:
         cerebro.loop.run_forever()
