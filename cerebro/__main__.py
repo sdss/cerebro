@@ -23,9 +23,6 @@ from cerebro import Cerebro
 nest_asyncio.apply()
 
 
-CWD = os.getcwd()
-
-
 if sys.platform in ["linux", "linux2", "darwin"]:
     pidfile = "/var/tmp/cerebro.pid"
 else:
@@ -39,14 +36,19 @@ def cerebro():
     pass
 
 
-@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=CWD, pidfile=pidfile)
+@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=os.getcwd(), pidfile=pidfile)
+@click.option(
+    "--sources",
+    type=str,
+    help="Comma-separated list of sources to start.",
+)
 @click.option(
     "--config",
     type=click.Path(exists=True, dir_okay=False),
     help="Absolute path to config file. Defaults to internal config.",
 )
 @cli_coro()
-async def daemon(config, logfile, no_log_rotate):
+async def daemon(sources, config):
     """Handle the daemon."""
 
     if not config:
@@ -54,7 +56,9 @@ async def daemon(config, logfile, no_log_rotate):
     else:
         config = os.path.realpath(config)
 
-    cerebro = Cerebro(config=config)
+    sources = sources.split(",") if sources else []
+
+    cerebro = Cerebro(config=config, sources=sources)
 
     try:
         cerebro.loop.run_forever()

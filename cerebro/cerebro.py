@@ -143,7 +143,7 @@ class Cerebellum(type):
             return args, kwargs
 
         # Remove input sources and observers.
-        kwargs.pop("sources", None)
+        sources_kw = kwargs.pop("sources", [])
         kwargs.pop("observers", None)
 
         config_file = kwargs.pop("config")
@@ -157,6 +157,8 @@ class Cerebellum(type):
 
         sources = []
         for source_name, params in config.pop("sources", {}).items():
+            if len(sources_kw) != 0 and source_name not in sources_kw:
+                continue
             type_ = params.pop("type")
             Subclass = get_source_subclass(type_)
             if Subclass is None:
@@ -250,7 +252,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         self,
         name: str = "cerebro",
         tags: dict[str, Any] = {},
-        sources: list[Source] = [],
+        sources: list[Source | str] = [],
         observers: list[Observer] = [],
         config: Optional[str | dict | pathlib.Path] = None,
         ntp_server: str = "us.pool.ntp.org",
