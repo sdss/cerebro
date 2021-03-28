@@ -66,7 +66,7 @@ class TronSource(Source):
 
         super().__init__(name, bucket=bucket, tags=tags)
 
-        self.tron = TronConnection(host, port, model_names=actors)
+        self.tron = TronConnection(host, port, models=actors)
         self.keywords = keywords
 
         for model in self.tron.models:
@@ -88,7 +88,7 @@ class TronSource(Source):
     async def process_keyword(self, model, keyword):
         """Processes a keyword received from Tron."""
 
-        key = keyword.key
+        key = keyword.keyword
         name = keyword.name
 
         actor = model.name
