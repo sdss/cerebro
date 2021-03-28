@@ -51,7 +51,7 @@ class TronSource(Source):
     """
 
     source_type = "tron"
-    timout = 60
+    timeout = 60
 
     def __init__(
         self,
