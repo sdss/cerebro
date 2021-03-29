@@ -24,6 +24,7 @@ __all__ = ["GoveeSource"]
 class GoveeSource(Source):
 
     source_type = "govee"
+    timeout = 10
 
     def __init__(
         self,
@@ -82,6 +83,11 @@ class GoveeSource(Source):
                 temp = float(temp)
                 hum = float(hum)
 
+                # Check the timestamp. If the data point is too old, skip.
+                if (datetime.utcnow() - date).seconds > 2 * self.timeout:
+                    await asyncio.sleep(self.timeout)
+                    continue
+
                 bucket = self.bucket or "sensors"
 
                 tags = self.tags.copy()
@@ -114,4 +120,4 @@ class GoveeSource(Source):
 
                 warnings.warn(f"Problem found in {self.name}: {err}", UserWarning)
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(self.timeout)
