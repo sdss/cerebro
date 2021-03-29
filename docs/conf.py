@@ -100,6 +100,7 @@ releases_unstable_prehistory = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.7", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+    "drift": ("http://sdss-drift.readthedocs.io/en/latest/", None),
 }
 # 'astropy': ('http://docs.astropy.org/en/latest', None),
 # 'matplotlib': ('https://matplotlib.org/', None),
@@ -107,7 +108,7 @@ intersphinx_mapping = {
 
 autodoc_mock_imports = ["_tkinter"]
 autodoc_member_order = "groupwise"
-autodoc_default_options = {"members": None, "show-inheritance": None}
+# autodoc_default_options = {"members": None, "show-inheritance": None}
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True

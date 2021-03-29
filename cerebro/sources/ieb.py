@@ -36,7 +36,7 @@ class IEBSource(Source):
         the IEB Modbus controller to use.
     config
         The path to a configuration file that can be loaded using
-        :py:method:`~drift.drift.Drift.from_config`.
+        `~drift.drift.Drift.from_config`.
     devices
         A list of devices to monitor, with the format ``<module>.<device>``.
     default_delay

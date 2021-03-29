@@ -190,7 +190,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
     """Handles a list of data sources to which observers can subscribe.
 
     Creates an `RX <https://rxpy.readthedocs.io/en/latest/>`__ subject that
-    monitors a list of data sources. `Writer instances <.Writer>` can
+    monitors a list of data sources. `.Observer` instances can
     subscribe to the combined data stream, which is served as a uniformly
     formatted dictionary.
 
