@@ -3,7 +3,7 @@
 ![Versions](https://img.shields.io/badge/python->3.7-blue)
 [![Documentation Status](https://readthedocs.org/projects/sdss-cerebro/badge/?version=latest)](https://sdss-cerebro.readthedocs.io/en/latest/?badge=latest)
 [![Test Status](https://github.com/albireox/cerebro/workflows/Test/badge.svg)](https://github.com/sdss/sdss/actions)
-[![codecov](https://codecov.io/gh/sdss/sdss/branch/main/graph/badge.svg)](https://codecov.io/gh/sdss/cerebro)
+[![codecov](https://codecov.io/gh/sdss/cerebro/branch/main/graph/badge.svg)](https://codecov.io/gh/sdss/cerebro)
 
 A library to gather time-series data from different subsystems and store them in an InfluxDB server.
 
