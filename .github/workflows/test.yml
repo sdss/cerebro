@@ -59,14 +59,13 @@ jobs:
           npm install -g pyright
           pyright
 
-    # - name: Test with pytest
-    #   run: |
-    #     pip install pytest pytest-cov pytest-asyncio pytest-mock asynctest pytest-sugar
-    #     pip install coverage[toml]
-    #     pytest
+      - name: Test with pytest
+        run: |
+          pip install pytest pytest-cov pytest-asyncio pytest-mock asynctest pytest-sugar
+          pip install coverage[toml]
+          pytest
 
-    # - name: Upload coverage to Codecov
-    #   if: matrix.python-version == '3.8'
-    #   uses: codecov/codecov-action@v1
-    #   with:
-    #     file: ./coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
