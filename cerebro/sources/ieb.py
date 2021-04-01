@@ -9,12 +9,13 @@
 from __future__ import annotations
 
 import asyncio
+import warnings
+from contextlib import suppress
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from drift import Drift, Relay
+from drift import Device, Drift
 
-from .. import log
 from .source import DataPoints, Source
 
 
@@ -39,13 +40,8 @@ class IEBSource(Source):
         `~drift.drift.Drift.from_config`.
     devices
         A list of devices to monitor, with the format ``<module>.<device>``.
-    default_delay
-        The default delay between measurements for a device, in seconds.
-    delays
-        A dictionary of ``{key: delay}`` where ``key`` is either the device
-        name as ``<module>.<device>`` or a module name. In the latter case the
-        delay applies to all the devices in that module. If the device or
-        module is not specified, the ``default_delay`` will be used.
+    delay
+        The delay between measurements of the devices, in seconds.
     kwargs
         Other arguments to pass to `.Source`.
 
@@ -59,8 +55,7 @@ class IEBSource(Source):
         ieb: Optional[Drift] = None,
         config: Optional[str] = None,
         devices: Optional[List[str]] = None,
-        default_delay: float = 5.0,
-        delays: Dict[str, float] = {},
+        delay: float = 5.0,
         **kwargs,
     ):
 
@@ -76,20 +71,19 @@ class IEBSource(Source):
         else:
             raise ValueError("Either ieb or config are needed.")
 
+        self.devices: List[Device]
         if devices is None:
-            devices = [
-                f"{module}.{device}"
+            self.devices = [
+                device
                 for module in self.ieb.modules
                 for device in self.ieb[module].devices
             ]
+        else:
+            self.devices = [self.ieb.get_device(device) for device in devices]
 
-        self.devices = devices
+        self.delay = delay
 
-        self.delays = delays
-        self.defaul_delay = default_delay
-
-        self._tasks: List[asyncio.Task] = []
-        self._lock = asyncio.Lock()
+        self._task: asyncio.Task | None = None
 
     async def start(self):
         """Starts and tests the connection to the IEB and begins monitoring."""
@@ -98,70 +92,48 @@ class IEBSource(Source):
         async with self.ieb:
             pass
 
-        for device in self.devices:
-            self._schedule_task(device)
+        self._task = asyncio.create_task(self._measure())
 
-    def stop(self):
+    async def stop(self):
         """Stops monitoring tasks."""
 
-        for task in self._tasks:
-            task.cancel()
-        self._tasks = []
+        if self._task:
+            with suppress(asyncio.CancelledError):
+                self._task.cancel()
+                await self._task
 
-    def _schedule_task(self, device):
-        """Schedule the monitor task for a given device."""
+    async def _measure(self):
+        """Schedules measurements."""
 
-        task = asyncio.create_task(self.measure_device(device))
-        task.add_done_callback(self._tasks.remove)
-        self._tasks.append(task)
-
-    async def measure_device(self, device):
-        """Reads a device and passes the data to `.Cerebro`."""
-
-        async with self._lock:
+        while True:
             try:
-                dev = self.ieb.get_device(device)
-                value, units = await dev.read(device)
-                read = True
-                if isinstance(dev, Relay):
-                    value = True if value == "closed" else False
-            except Exception as ee:
-                log.error(f"{self.name} failed reading device {device}: {ee}.")
-                value = units = None
-                read = False
+                await asyncio.wait_for(self.measure_devices(), timeout=5)
+            except asyncio.TimeoutError:
+                warnings.warn("IEB: timed out measuring devices.")
+            await asyncio.sleep(self.delay)
 
-        if read is True:
+    async def measure_devices(self):
+        """Reads devices and passes the data to `.Cerebro`."""
 
-            tags = self.tags.copy()
-            if units:
-                tags.update({"units": units})
+        data = []
 
-            data_points = DataPoints(
-                data=[
+        async with self.ieb:
+            for device in self.devices:
+                category = device.category
+                if category is None:
+                    continue
+                value, units = await device.read(adapt=True, connect=False)
+                tags = self.tags.copy()
+                if units:
+                    tags.update({"units": units})
+                data.append(
                     {
-                        "measurement": self.name,
-                        "tags": self.tags,
-                        "fields": {device: value},
+                        "measurement": category,
+                        "fields": {device.name: value},
+                        "tags": tags,
                     }
-                ],
-                bucket=self.bucket,
-            )
+                )
 
-            self.on_next(data_points)
+        data_points = DataPoints(data=data, bucket=self.bucket)
 
-        module_name, device_name = device.split(".")
-        if isinstance(self.delays, dict):
-            if device in self.delays:
-                delay = self.delays[device]
-            elif device_name in self.delays:
-                delay = self.delays[device_name]
-            elif module_name in self.delays:
-                delay = self.delays[module_name]
-            else:
-                delay = self.defaul_delay
-        else:
-            delay = self.defaul_delay
-
-        await asyncio.sleep(delay)
-
-        self._schedule_task(device)
+        self.on_next(data_points)
