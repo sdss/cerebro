@@ -76,7 +76,7 @@ class IEBSource(Source):
             self.devices = [
                 device
                 for module in self.ieb.modules
-                for device in self.ieb[module].devices
+                for device in self.ieb[module].devices.values()
             ]
         else:
             self.devices = [self.ieb.get_device(device) for device in devices]
@@ -109,7 +109,9 @@ class IEBSource(Source):
             try:
                 await asyncio.wait_for(self.measure_devices(), timeout=5)
             except asyncio.TimeoutError:
-                warnings.warn("IEB: timed out measuring devices.")
+                warnings.warn("IEB: timed out measuring devices.", UserWarning)
+            except Exception as err:
+                warnings.warn(f"IEB: unknown exception: {err}", UserWarning)
             await asyncio.sleep(self.delay)
 
     async def measure_devices(self):
@@ -123,6 +125,9 @@ class IEBSource(Source):
                 if category is None:
                     continue
                 value, units = await device.read(adapt=True, connect=False)
+                if device.__type__ == 'relay':
+                    value = True if value == 'closed' else False
+                    units = None
                 tags = self.tags.copy()
                 if units:
                     tags.update({"units": units})
