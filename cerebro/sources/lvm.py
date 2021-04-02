@@ -118,6 +118,6 @@ class GoveeSource(Source):
 
             except Exception as err:
 
-                warnings.warn(f"Problem found in {self.name}: {err}", UserWarning)
+                warnings.warn(f"Problem found in {self.name}: {str(err)}", UserWarning)
 
             await asyncio.sleep(self.timeout)
