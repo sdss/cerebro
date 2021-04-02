@@ -60,6 +60,7 @@ class GoveeSource(Source):
 
         if not self.writer.is_closing():
             self.writer.close()
+            await self.writer.wait_closed()
 
         with suppress(asyncio.CancelledError):
             if self._task:
@@ -67,14 +68,21 @@ class GoveeSource(Source):
                 await self._task
             self._task = None
 
+    async def restart(self):
+        """Restarts the server."""
+
+        await self.stop()
+        await self.start()
+
     async def get_measurement(self):
         """Queries the Govee server and reports a new measurement."""
 
         while True:
 
-            self.writer.write(b"status\n")
-
             try:
+                self.writer.write(b"status\n")
+                await self.writer.drain()
+
                 data = await asyncio.wait_for(self.reader.readline(), timeout=5)
 
                 address, temp, hum, _, isot = data.decode().strip().split()
@@ -119,5 +127,9 @@ class GoveeSource(Source):
             except Exception as err:
 
                 warnings.warn(f"Problem found in {self.name}: {str(err)}", UserWarning)
+
+                if err.__class__ == ConnectionError or self.reader.at_eof:
+                    await self.restart()
+                    return
 
             await asyncio.sleep(self.timeout)
