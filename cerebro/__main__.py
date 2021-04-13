@@ -55,7 +55,10 @@ def cerebro(ctx, sources, config):
 
 
 @cerebro.group(
-    cls=DaemonGroup, prog="cerebro_daemon", workdir=os.getcwd(), pidfile=pidfile
+    cls=DaemonGroup,
+    prog="cerebro_daemon",
+    workdir=os.getcwd(),
+    pidfile=pidfile,
 )
 @cli_coro()
 @click.pass_context
