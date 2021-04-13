@@ -54,7 +54,9 @@ def cerebro(ctx, sources, config):
     ctx.obj = {"sources": sources, "config": config}
 
 
-@cerebro.group(cls=DaemonGroup, prog="daemon", workdir=os.getcwd(), pidfile=pidfile)
+@cerebro.group(
+    cls=DaemonGroup, prog="cerebro_daemon", workdir=os.getcwd(), pidfile=pidfile
+)
 @cli_coro()
 @click.pass_context
 async def daemon(ctx):
