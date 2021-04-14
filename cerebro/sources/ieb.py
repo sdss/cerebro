@@ -125,8 +125,8 @@ class IEBSource(Source):
                 if category is None:
                     continue
                 value, units = await device.read(adapt=True, connect=False)
-                if device.__type__ == 'relay':
-                    value = True if value == 'closed' else False
+                if device.__type__ == "relay":
+                    value = True if value == "closed" else False
                     units = None
                 tags = self.tags.copy()
                 if units:
