@@ -210,10 +210,10 @@ class Sens4Source(Source):
             for name in self.connections:
                 reader = self.connections[name]["reader"]
                 writer = self.connections[name]["writer"]
-                device_id = self.connections[name]["device_id"]
+                device_id = self.devices[name]["device_id"]
 
                 try:
-                    writer.write(f"@{device_id:d}Q?\\".encode())
+                    writer.write((f"@{device_id:d}Q?\\").encode())
                     await writer.drain()
 
                     data = await asyncio.wait_for(reader.readuntil(b"\\"), timeout=5)

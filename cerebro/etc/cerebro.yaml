@@ -3,32 +3,40 @@ ntp_server: us.pool.ntp.org
 logfile: /data/logs/cerebro/cerebro.log
 
 sources:
-    tron:
-        type: tron
-        bucket: Actors
-        host: localhost
-        port: 6093
-        tags:
-            observatory: ${OBSERVATORY}
-        actors:
-            - tcc
-            - apo
-    ieb:
-        type: ieb
-        bucket: IEB
-        config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
-    lvm_govee:
-        type: govee
-        host: 10.7.45.27
-        port: 1111
-        bucket: sensors
-        devices:
-            H5179: 'e0:13:d5:71:d0:66'
+  tron:
+    type: tron
+    bucket: Actors
+    host: localhost
+    port: 6093
+    tags:
+      observatory: ${OBSERVATORY}
+    actors:
+      - tcc
+      - apo
+  ieb:
+    type: ieb
+    bucket: IEB
+    config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+  lvm_govee:
+    type: govee
+    host: 10.7.45.27
+    port: 1111
+    bucket: sensors
+    devices:
+      H5179: 'e0:13:d5:71:d0:66'
+  lvm_sens4:
+    type: sens4
+    host: 10.7.45.27
+    bucket: sensors
+    devices:
+      r1:
+        port: 1112
+        device_id: 253
 
 observers:
-    influxdb:
-        type: influxdb
-        url: http://localhost:9999
-        token: null
-        org: SDSS
-        default_bucket: Actors
+  influxdb:
+    type: influxdb
+    url: http://localhost:9999
+    token: null
+    org: SDSS
+    default_bucket: Actors
