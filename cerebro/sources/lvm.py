@@ -248,10 +248,11 @@ class Sens4Source(Source):
                 except Exception as err:
 
                     warnings.warn(
-                        f"Problem found in {self.name}: {str(err)}", UserWarning
+                        f"Problem found in {self.name} {name}: {str(err)}",
+                        UserWarning,
                     )
 
-                    if err.__class__ == ConnectionError or self.reader.at_eof:
+                    if err.__class__ == ConnectionError or reader.at_eof:
                         await self.restart()
                         return
 
