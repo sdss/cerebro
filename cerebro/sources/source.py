@@ -210,7 +210,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         await self.start()
 
     @abc.abstractmethod
-    async def _read_internal(self) -> list[dict]:
+    async def _read_internal(self) -> list[dict] | None:
         """Queries the TCP server and returns a list of points."""
 
         pass
@@ -223,7 +223,8 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
             try:
 
                 points = await self._read_internal()
-                self.on_next(DataPoints(data=points, bucket=self.bucket))
+                if points is not None:
+                    self.on_next(DataPoints(data=points, bucket=self.bucket))
 
                 if self.reader.at_eof():
                     self.reader.feed_eof()
