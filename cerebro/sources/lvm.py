@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import asyncio
 import re
-import warnings
-from contextlib import suppress
 from datetime import datetime
 
 from typing import Optional
 
 from cerebro import log
-from cerebro.source import DataPoints, TCPSource
+
+from .source import TCPSource
 
 
 __all__ = ["GoveeSource", "Sens4Source"]
