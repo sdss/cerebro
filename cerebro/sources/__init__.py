@@ -8,5 +8,5 @@
 
 from .ieb import IEBSource
 from .lvm import GoveeSource
-from .source import Source, get_source_subclass
+from .source import Source, TCPSource, get_source_subclass
 from .tron import TronSource

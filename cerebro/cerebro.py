@@ -110,9 +110,10 @@ class SourceList(list):
         source.subscribe(on_next=self.on_next, scheduler=self.scheduler)
 
         if asyncio.iscoroutinefunction(source.start):
-            timeout = getattr(source, "timeout", 10.0)
+            timeout = getattr(source, "timeout", None)
             task = self.loop.create_task(source.start())
-            self.loop.call_later(timeout, check_start, task)
+            if timeout:
+                self.loop.call_later(timeout, check_start, task)
         else:
             self.loop.call_soon(source.start)
 
