@@ -50,7 +50,7 @@ class GoveeSource(TCPSource):
 
     async def _read_internal(self) -> list[dict] | None:
 
-        self.writer.write(b'status\n')
+        self.writer.write(b"status\n")
         await self.writer.drain()
 
         data = await asyncio.wait_for(self.reader.readline(), timeout=5)
