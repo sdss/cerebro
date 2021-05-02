@@ -92,16 +92,6 @@ class SourceList(list):
     def add_source(self, source: Source):
         """Adds a `.Source`."""
 
-        def check_start(task):
-            if task.done():
-                exception = task.exception()
-                if exception:
-                    log.error(
-                        "Failed starting data source " f"{source.name}: {exception!s}"
-                    )
-            else:
-                log.error(f"Timed out trying to start source {source.name}.")
-
         if not isinstance(source, Source):
             raise NotImplementedError(
                 "Only instances of Source can " "be passed at this point."
@@ -110,9 +100,7 @@ class SourceList(list):
         source.subscribe(on_next=self.on_next, scheduler=self.scheduler)
 
         if asyncio.iscoroutinefunction(source.start):
-            timeout = getattr(source, "timeout", 10.0)
-            task = self.loop.create_task(source.start())
-            self.loop.call_later(timeout, check_start, task)
+            self.loop.create_task(source.start())
         else:
             self.loop.call_soon(source.start)
 
