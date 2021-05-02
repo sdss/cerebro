@@ -244,8 +244,10 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 if await self.restart():
                     return
 
-            except Exception as err:
+            except asyncio.TimeoutError:
+                log.warning(f"{self.name}: timed out waiting for the server to reply.")
 
+            except Exception as err:
                 log.warning(f"{self.name}: {str(err)}")
 
             await asyncio.sleep(self.delay)
