@@ -8,7 +8,9 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
+from contextlib import suppress
 
 from typing import Any, Dict, List, NamedTuple, Optional, Type
 
@@ -16,8 +18,16 @@ import rx
 from rx.disposable import Disposable
 from rx.subject import Subject
 
+from cerebro import log
 
-__all__ = ["DataPoints", "wrap_async_observable", "Source", "get_source_subclass"]
+
+__all__ = [
+    "DataPoints",
+    "wrap_async_observable",
+    "Source",
+    "get_source_subclass",
+    "TCPSource",
+]
 
 
 class DataPoints(NamedTuple):
@@ -64,10 +74,10 @@ class Source(Subject):
     """
 
     #: str: The type of data source.
-    source_type: Optional[str] = None
+    source_type: str | None = None
 
     #: float: Seconds to wait for initialisation.
-    timeout: float = 10
+    timeout: float | None = None
 
     def __init__(
         self,
@@ -105,6 +115,139 @@ class Source(Subject):
         """Stops the data source parsing and closes any open connection."""
 
         pass
+
+
+class TCPSource(Source, metaclass=abc.ABCMeta):
+    """A source for a TCP server with robust reconnection and error handling.
+
+    Parameters
+    ----------
+    name
+        The name of the data source.
+    host
+        The host to which to connect.
+    port
+        The port on which the TCP server runs.
+    delay
+        How long to wait between queries to the TCP server. If `None`, uses the class
+        delay.
+    kwargs
+        Other parameters to pass to `.Source`.
+
+    """
+
+    delay: float = 1
+
+    def __init__(
+        self,
+        name: str,
+        host: str,
+        port: int,
+        delay: Optional[float] = None,
+        **kwargs,
+    ):
+
+        super().__init__(name, **kwargs)
+
+        self.host = host
+        self.port = port
+
+        self.delay = delay or self.delay
+
+        self.reader: asyncio.StreamReader
+        self.writer: asyncio.StreamWriter
+
+        self.running = False
+        self._runner: asyncio.Task | None = None
+
+    async def start(self):
+        """Connects to the socket."""
+
+        while True:
+            try:
+                self.reader, self.writer = await asyncio.open_connection(
+                    self.host,
+                    self.port,
+                )
+                self.running = True
+                break
+            except (
+                OSError,
+                ConnectionError,
+                ConnectionResetError,
+                ConnectionRefusedError,
+            ) as err:
+                log.warning(f"{self.name}: {err}. Reconnecting in 5 seconds.")
+                await asyncio.sleep(5)
+
+        log.debug(f"{self.name}: connection established.")
+        self._runner = asyncio.create_task(self.read())
+
+    async def stop(self):
+        """Disconnects from socket."""
+
+        log.debug(f"{self.name}: stopping connection.")
+
+        if not self.running:
+            raise RuntimeError(f"{self.name}: source is not running.")
+
+        if not self.writer.is_closing():
+            self.writer.close()
+            await self.writer.wait_closed()
+
+        with suppress(asyncio.CancelledError):
+            if self._runner:
+                self._runner.cancel()
+                await self._runner
+            self._runner = None
+
+    async def restart(self):
+        """Restarts the server."""
+
+        log.debug(f"{self.name}: restarting connection.")
+
+        await self.stop()
+        await self.start()
+
+    @abc.abstractmethod
+    async def _read_internal(self) -> list[dict]:
+        """Queries the TCP server and returns a list of points."""
+
+        pass
+
+    async def read(self):
+        """Queries the TCP server, emits data points, and handles disconnections."""
+
+        while True:
+
+            try:
+
+                points = await self._read_internal()
+                self.on_next(DataPoints(data=points, bucket=self.bucket))
+
+                if self.reader.at_eof():
+                    self.reader.feed_eof()
+                    log.warning(f"{self.name}: reader at EOF. Restarting.")
+                    if await self.restart():
+                        return
+
+            except (
+                ConnectionAbortedError,
+                ConnectionError,
+                ConnectionRefusedError,
+                ConnectionResetError,
+                OSError,
+            ) as err:
+
+                log.warning(f"{self.name}: {str(err)} Trying to reconnect.")
+                if await self.restart():
+                    return
+
+            except Exception as err:
+
+                log.warning(f"{self.name}: {str(err)}")
+
+            await asyncio.sleep(self.delay)
 
 
 def get_source_subclass(type_: str) -> Type[Source] | None:
