@@ -196,11 +196,21 @@ class Sens4Source(Source):
                     await self._task
                 self._task = None
 
-    async def restart(self):
+    async def restart(self, retry=True):
         """Restarts the server."""
 
         await self.stop()
-        await self.start()
+
+        if retry is False:
+            await self.start()
+            return
+        else:
+            while True:
+                try:
+                    await self.start()
+                    return
+                except Exception:
+                    await asyncio.sleep(1)
 
     async def read(self):
         """Queries the Sens4 devices and reports a new measurement."""
@@ -208,9 +218,9 @@ class Sens4Source(Source):
         while True:
 
             for name in self.connections:
-                reader = self.connections[name]["reader"]
-                writer = self.connections[name]["writer"]
-                device_id = self.devices[name]["device_id"]
+                reader: asyncio.StreamReader = self.connections[name]["reader"]
+                writer: asyncio.StreamWriter = self.connections[name]["writer"]
+                device_id: int = self.devices[name]["device_id"]
 
                 try:
                     writer.write((f"@{device_id:d}Q?\\").encode())
@@ -245,6 +255,17 @@ class Sens4Source(Source):
 
                     self.on_next(DataPoints(data=[point], bucket=bucket))
 
+                except (
+                    ConnectionAbortedError,
+                    ConnectionError,
+                    ConnectionRefusedError,
+                    ConnectionResetError,
+                ) as err:
+
+                    warnings.warn(f"Connection reset: {err} Trying to reconnect.")
+                    if await self.restart(retry=True):
+                        return
+
                 except Exception as err:
 
                     warnings.warn(
@@ -252,8 +273,8 @@ class Sens4Source(Source):
                         UserWarning,
                     )
 
-                    if err.__class__ == ConnectionError or reader.at_eof:
-                        await self.restart()
-                        return
+                    if reader.at_eof():
+                        if await self.restart(retry=True):
+                            return
 
             await asyncio.sleep(self.timeout)
