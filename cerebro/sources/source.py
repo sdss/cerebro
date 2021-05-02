@@ -110,7 +110,12 @@ class Source(Subject):
 def get_source_subclass(type_: str) -> Type[Source] | None:
     """Returns a `.Source` subclass based on its ``data_type``."""
 
-    for subclass in Source.__subclasses__():
+    def all_subclasses(cls):
+        return set(cls.__subclasses__()).union(
+            [s for c in cls.__subclasses__() for s in all_subclasses(c)]
+        )
+
+    for subclass in all_subclasses(Source):
         if subclass.source_type == type_:
             return subclass
 
