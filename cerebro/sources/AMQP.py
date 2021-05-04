@@ -80,13 +80,13 @@ class AMQPSource(Source):
             for actor in key_actors
         }
 
-        for model in self.client.models.values():
-            model.register_callback(self.process_keyword)
-
     async def start(self):
         """Starts the connection to RabbitMQ."""
 
         await self.client.start()
+
+        for model in self.client.models.values():
+            model.register_callback(self.process_keyword)
 
     async def stop(self):
         """Closes the connection to Tron."""
