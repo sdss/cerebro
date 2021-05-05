@@ -6,21 +6,17 @@
 # @Filename: __main__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+import asyncio
 import os
 import pathlib
 import sys
 
 import click
-import nest_asyncio
 from click_default_group import DefaultGroup
 
 from sdsstools.daemonizer import DaemonGroup, cli_coro
 
 from cerebro import Cerebro
-
-
-# This allows to do loop.run_forever() while the loop is already running.
-nest_asyncio.apply()
 
 
 if sys.platform in ["linux", "linux2", "darwin"]:
@@ -67,11 +63,14 @@ async def daemon(ctx):
 
     cerebro = Cerebro(config=ctx.obj["config"], sources=ctx.obj["sources"])
 
-    try:
-        cerebro.loop.run_forever()
-    except KeyboardInterrupt:
-        cerebro.stop()
-        cerebro.loop.stop()
+    # Hacky way to run forever. nest_asyncio has some issues with CLU.
+    while True:
+        try:
+            await asyncio.sleep(60)
+        except KeyboardInterrupt:
+            cerebro.stop()
+            cerebro.loop.stop()
+            return
 
 
 def main():

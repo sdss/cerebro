@@ -31,6 +31,12 @@ sources:
     device_id: 253
     ccd: r1
     bucket: sensors
+  lvm_actors:
+    type: amqp
+    bucket: actors
+    keywords:
+      - archon.status.mod2/tempa
+      - archon.status.mod2/tempb
 
 observers:
   influxdb:

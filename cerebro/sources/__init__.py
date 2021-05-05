@@ -6,6 +6,7 @@
 # @Filename: __init__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from .AMQP import AMQPSource
 from .ieb import IEBSource
 from .lvm import GoveeSource
 from .source import Source, TCPSource, get_source_subclass
