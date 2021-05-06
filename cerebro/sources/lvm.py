@@ -31,8 +31,8 @@ class GoveeSource(TCPSource):
     def __init__(
         self,
         *args,
+        address: str,
         device: Optional[str] = None,
-        address: Optional[str] = None,
         **kwargs,
     ):
 
@@ -41,19 +41,20 @@ class GoveeSource(TCPSource):
         assert device or address, "One of device or address are needed."
 
         self.device = device
-
-        self.address = address
-        if self.address:
-            self.address = self.address.upper()
+        self.address = address.upper()
 
         self.bucket = self.bucket or "sensors"
 
     async def _read_internal(self) -> list[dict] | None:
 
-        self.writer.write(b"status\n")
+        self.writer.write((f"status {self.address}\n").encode())
         await self.writer.drain()
 
         data = await asyncio.wait_for(self.reader.readline(), timeout=5)
+
+        # Not found
+        if data == b"?\n":
+            return
 
         address, temp, hum, _, isot = data.decode().strip().split()
 
@@ -69,7 +70,7 @@ class GoveeSource(TCPSource):
         tags["address"] = address.upper()
         tags["device"] = self.device
 
-        if self.address and address != self.address:
+        if address != self.address:
             log.warning(
                 f"{self.name}: mismatch between expected address "
                 f"{self.address} and received {address}."
