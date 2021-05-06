@@ -37,7 +37,7 @@ sources:
       location: 'Outside clean room'
   lvm_sens4_r1:
     type: sens4
-    host: 10.7.45.27
+    host: 10.7.45.30
     port: 1112
     device_id: 253
     ccd: r1
