@@ -19,7 +19,7 @@ sources:
     config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
   lvm_govee_clean_room:
     type: govee
-    host: 10.7.45.27
+    host: 10.7.45.30
     port: 1111
     device: H5179
     address: 'e0:13:d5:71:d0:66'
@@ -28,7 +28,7 @@ sources:
       location: 'Clean room'
   lvm_govee_lab:
     type: govee
-    host: 10.7.45.27
+    host: 10.7.45.30
     port: 1111
     device: H5072_1
     address: 'a4:c1:38:82:a2:88'
