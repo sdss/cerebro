@@ -17,13 +17,24 @@ sources:
     type: ieb
     bucket: IEB
     config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
-  lvm_govee:
+  lvm_govee_clean_room:
     type: govee
     host: 10.7.45.27
     port: 1111
     device: H5179
     address: 'e0:13:d5:71:d0:66'
     bucket: sensors
+    tags:
+      location: 'Clean room'
+  lvm_govee_lab:
+    type: govee
+    host: 10.7.45.27
+    port: 1111
+    device: H5072_1
+    address: 'a4:c1:38:82:a2:88'
+    bucket: sensors
+    tags:
+      location: 'Outside clean room'
   lvm_sens4_r1:
     type: sens4
     host: 10.7.45.27
