@@ -48,6 +48,7 @@ sources:
     keywords:
       - archon.status.mod2/tempa
       - archon.status.mod2/tempb
+      - archon.status.mod2/heateraoutput
 
 observers:
   influxdb:
