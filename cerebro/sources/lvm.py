@@ -103,14 +103,22 @@ class Sens4Source(TCPSource):
     """
 
     source_type = "sens4"
-    delay = 5
 
-    def __init__(self, *args, device_id: int, ccd: str = "NA", **kwargs):
+    def __init__(
+        self,
+        *args,
+        device_id: int,
+        ccd: str = "NA",
+        delay: float = 1,
+        **kwargs,
+    ):
 
         super().__init__(*args, **kwargs)
 
         self.device_id = device_id
         self.ccd = ccd
+
+        self.delay = delay
 
         self.bucket = self.bucket or "sensors"
 
