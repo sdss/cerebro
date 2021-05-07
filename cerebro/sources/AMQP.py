@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
+
 from typing import Any, Optional
 
 from clu import AMQPClient
@@ -43,6 +46,9 @@ class AMQPSource(Source):
         A list of keyword values to output. The format must be
         ``actor.keyword.subkeyword.subsubkeyword``. The final value extracted
         must be a scalar.
+    commands
+        A mapping of commands to be issued to the interval, in seconds. For
+        example ``{"archon status": 5}``.
 
     """
 
@@ -59,6 +65,7 @@ class AMQPSource(Source):
         user: str = "guest",
         password: str = "guest",
         keywords: list[str] = [],
+        commands: dict[str, float] = {},
     ):
 
         super().__init__(name, bucket=bucket, tags=tags)
@@ -80,6 +87,9 @@ class AMQPSource(Source):
             for actor in key_actors
         }
 
+        self.commands = commands
+        self._command_tasks: list[asyncio.Task] = []
+
     async def start(self):
         """Starts the connection to RabbitMQ."""
 
@@ -88,10 +98,36 @@ class AMQPSource(Source):
         for model in self.client.models.values():
             model.register_callback(self.process_keyword)
 
+        for command in self.commands:
+            self._command_tasks.append(
+                asyncio.create_task(
+                    self.schedule_command(
+                        command,
+                        self.commands[command],
+                    )
+                )
+            )
+
     async def stop(self):
         """Closes the connection to Tron."""
 
+        for task in self._command_tasks:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+        self._command_tasks = []
+
         await self.client.stop()
+
+    async def schedule_command(self, command: str, interval: float):
+        """Schedules a command to be executed on an interval."""
+
+        actor = command.split(" ")[0]
+        cmd_str = " ".join(command.split(" ")[1:])
+
+        while True:
+            await (await self.client.send_command(actor, cmd_str))
+            await asyncio.sleep(interval)
 
     async def process_keyword(self, model, keyword):
         """Processes a keyword received from Tron."""
