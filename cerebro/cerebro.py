@@ -275,28 +275,42 @@ class Cerebro(Subject, metaclass=MetaCerebro):
             logfile: /data/logs/cerebro/cerebro.log
             ntp_server: us.pool.ntp.org
             tags:
-                observatory: ${OBSERVATORY}
+              observatory: ${OBSERVATORY}
+            profiles:
+              default:
+                sources:
+                  - tron
+                observers:
+                  - influxdb
             sources:
-                tron:
-                    type: tron
-                    bucket: Actors
-                    host: localhost
-                    port: 6093
-                    actors:
-                        - tcc
-                        - apo
+              tron:
+                type: tron
+                bucket: Actors
+                host: localhost
+                port: 6093
+                actors:
+                  - tcc
+                  - apo
             observers:
-                influxdb:
-                    type: influxdb
-                    url: http://localhost:9999
-                    token: null
-                    org: SDSS
-                    default_bucket: FPS
+              influxdb:
+                type: influxdb
+                url: http://localhost:9999
+                token: null
+                org: SDSS
+                default_bucket: FPS
 
         Each source and observer must include a ``type`` key that correspond
         to the ``source_type`` and ``observer_type`` value of the `.Source`
-        and `.Writer` subclass to be used, respectively. If ``config`` is
-        defined, ``sources`` and ``observers`` are ignored.
+        and `.Writer` subclass to be used, respectively. The profile section, if
+        present, is a dictionary of profiles, each one defining a list of sources and
+        observers. If the items in the sources or observers list are strings, the
+        entries from the global ``sources`` and ``observers`` sections will be used.
+        The profile sources and observers items can also be dictionaries with the same
+        format as the global sources and observers. If ``config`` is defined, the
+        keywords ``sources`` and ``observers`` are ignored.
+    profile:
+        The name of the profile to use from the configuration file. If `None` and
+        ``config`` is defined, uses all the global sources and observers.
     ntp_server
         The route to the NTP server to use. The server is queried every hour
         to determine the offset between the NTP pool and the local computer.
