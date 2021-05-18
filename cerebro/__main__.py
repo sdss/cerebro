@@ -36,9 +36,13 @@ else:
     type=click.Path(exists=True, dir_okay=False),
     help="Absolute path to config file. Defaults to internal config.",
 )
+@click.option("--profile", "-p", type=str, help="The profile to use.")
 @click.pass_context
-def cerebro(ctx, sources, config):
+def cerebro(ctx, sources, config, profile):
     """Command Line Interface for cerebro."""
+
+    if sources and profile:
+        raise click.UsageError("--sources and --profile are mutually exclusive.")
 
     if not config:
         config = pathlib.Path(__file__).parent / "etc" / "cerebro.yaml"
@@ -47,7 +51,7 @@ def cerebro(ctx, sources, config):
 
     sources = sources.split(",") if sources else []
 
-    ctx.obj = {"sources": sources, "config": config}
+    ctx.obj = {"sources": sources, "config": config, "profile": profile}
 
 
 @cerebro.group(
@@ -61,7 +65,7 @@ def cerebro(ctx, sources, config):
 async def daemon(ctx):
     """Handle the daemon."""
 
-    cerebro = Cerebro(config=ctx.obj["config"], sources=ctx.obj["sources"])
+    cerebro = Cerebro(**ctx.obj)
 
     # Hacky way to run forever. nest_asyncio has some issues with CLU.
     while True:
