@@ -2,6 +2,24 @@ name: cerebro
 ntp_server: us.pool.ntp.org
 logfile: /data/logs/cerebro/cerebro.log
 
+profiles:
+  lvm-lab:
+    sources:
+      - lvm_govee_clean_room
+      - lvm_govee_lab
+      - lvm_sens4_r1
+      - lvm_actors
+    observers:
+      - influxdb
+  fps-osu:
+    sources:
+      - ieb:
+          type: ieb
+          bucket: FPS
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+    observers:
+      - influxdb
+
 sources:
   tron:
     type: tron

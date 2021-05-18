@@ -143,9 +143,14 @@ class Cerebellum(type):
         if kwargs.get("config", None) is None:
             return args, kwargs
 
+        if kwargs.get("sources", {}) and kwargs.get("profile", None):
+            raise ValueError("profile and sources are incompatible.")
+
         # Remove input sources and observers.
-        sources_kw = kwargs.pop("sources", [])
+        sources_kw = kwargs.pop("sources", {})
         kwargs.pop("observers", None)
+
+        profile_name = kwargs.get("profile", None)
 
         config_file = kwargs.pop("config")
         if isinstance(config_file, (str, pathlib.Path)):
@@ -156,28 +161,82 @@ class Cerebellum(type):
             raise ValueError(f"Invalid type {type(config_file)} for config.")
         config.update(kwargs)
 
-        sources = []
-        for source_name, params in config.pop("sources", {}).items():
-            if len(sources_kw) != 0 and source_name not in sources_kw:
-                continue
-            type_ = params.pop("type")
-            Subclass = get_source_subclass(type_)
-            if Subclass is None:
-                raise ValueError(f"Source type {type_} is not valid.")
-            sources.append(Subclass(source_name, **params))
+        profiles_data = config.pop("profiles", {})
 
+        sources = []
         observers = []
-        for observer_name, params in config.pop("observers", {}).items():
-            type_ = params.pop("type")
-            Subclass = get_observer_subclass(type_)
-            if Subclass is None:
-                raise ValueError(f"Writer type {type_} is not valid.")
-            observers.append(Subclass(observer_name, **params))
+
+        if profile_name:
+
+            assert profile_name in profiles_data
+
+            profile = profiles_data[profile_name]
+
+            global_sources = config.get("sources", {})
+            global_observers = config.get("observers", {})
+
+            for source in profile["sources"]:
+                if isinstance(source, str):
+                    sources.append(
+                        Cerebellum.__get_source(source, global_sources[source])
+                    )
+                elif isinstance(source, dict):
+                    for source_name in source:
+                        sources.append(
+                            Cerebellum.__get_source(
+                                source_name,
+                                source[source_name],
+                            )
+                        )
+                else:
+                    raise TypeError("Profile sources must be strings or dicts.")
+
+            for observer in profile["observers"]:
+                if isinstance(observer, str):
+                    observers.append(
+                        Cerebellum.__get_observer(observer, global_observers[observer])
+                    )
+                elif isinstance(observer, dict):
+                    for observer_name in observer:
+                        observers.append(
+                            Cerebellum.__get_observer(
+                                observer_name,
+                                observer[observer_name],
+                            )
+                        )
+                else:
+                    raise TypeError("Profile observers must be strings or dicts.")
+
+        else:
+
+            for source_name, params in config.pop("sources", {}).items():
+                if len(sources_kw) != 0 and source_name not in sources_kw:
+                    continue
+                sources.append(Cerebellum.__get_source(source_name, params))
+
+            for observer_name, params in config.pop("observers", {}).items():
+                observers.append(Cerebellum.__get_observer(observer_name, params))
 
         config["sources"] = sources
         config["observers"] = observers
 
         return args, config
+
+    @staticmethod
+    def __get_source(source_name, params):
+        type_ = params.pop("type")
+        Subclass = get_source_subclass(type_)
+        if Subclass is None:
+            raise ValueError(f"Source type {type_} is not valid.")
+        return Subclass(source_name, **params)
+
+    @staticmethod
+    def __get_observer(source_name, params):
+        type_ = params.pop("type")
+        Subclass = get_observer_subclass(type_)
+        if Subclass is None:
+            raise ValueError(f"Observer type {type_} is not valid.")
+        return Subclass(source_name, **params)
 
 
 # Combine ABCMeta and Cerebellum so that can add it as metaclass to Cerebro
@@ -216,28 +275,42 @@ class Cerebro(Subject, metaclass=MetaCerebro):
             logfile: /data/logs/cerebro/cerebro.log
             ntp_server: us.pool.ntp.org
             tags:
-                observatory: ${OBSERVATORY}
+              observatory: ${OBSERVATORY}
+            profiles:
+              default:
+                sources:
+                  - tron
+                observers:
+                  - influxdb
             sources:
-                tron:
-                    type: tron
-                    bucket: Actors
-                    host: localhost
-                    port: 6093
-                    actors:
-                        - tcc
-                        - apo
+              tron:
+                type: tron
+                bucket: Actors
+                host: localhost
+                port: 6093
+                actors:
+                  - tcc
+                  - apo
             observers:
-                influxdb:
-                    type: influxdb
-                    url: http://localhost:9999
-                    token: null
-                    org: SDSS
-                    default_bucket: FPS
+              influxdb:
+                type: influxdb
+                url: http://localhost:9999
+                token: null
+                org: SDSS
+                default_bucket: FPS
 
         Each source and observer must include a ``type`` key that correspond
         to the ``source_type`` and ``observer_type`` value of the `.Source`
-        and `.Writer` subclass to be used, respectively. If ``config`` is
-        defined, ``sources`` and ``observers`` are ignored.
+        and `.Writer` subclass to be used, respectively. The profile section, if
+        present, is a dictionary of profiles, each one defining a list of sources and
+        observers. If the items in the sources or observers list are strings, the
+        entries from the global ``sources`` and ``observers`` sections will be used.
+        The profile sources and observers items can also be dictionaries with the same
+        format as the global sources and observers. If ``config`` is defined, the
+        keywords ``sources`` and ``observers`` are ignored.
+    profile:
+        The name of the profile to use from the configuration file. If `None` and
+        ``config`` is defined, uses all the global sources and observers.
     ntp_server
         The route to the NTP server to use. The server is queried every hour
         to determine the offset between the NTP pool and the local computer.
@@ -256,6 +329,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         sources: List[Source | str] = [],
         observers: List[Observer] = [],
         config: Optional[str | dict | pathlib.Path] = None,
+        profile: Optional[str] = None,
         ntp_server: str = "us.pool.ntp.org",
         logfile: Optional[str] = None,
         log_rotate: bool = True,
