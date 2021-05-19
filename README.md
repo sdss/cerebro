@@ -5,11 +5,11 @@
 [![Test Status](https://github.com/albireox/cerebro/workflows/Test/badge.svg)](https://github.com/sdss/sdss/actions)
 [![codecov](https://codecov.io/gh/sdss/cerebro/branch/main/graph/badge.svg)](https://codecov.io/gh/sdss/cerebro)
 
-A library to gather time-series data from different subsystems and store them in an InfluxDB server.
+A library to gather time-series data from different sources and store them, with focus on InfluxDB databases. Documentation and concepts are defined [here](https://sdss-cerebro.readthedocs.io/).
 
 ## Installation
 
-In general you should be able to install ``cerebro`` by doing
+In general you should be able to install `cerebro` by doing
 
 ```console
 pip install sdss-cerebro
@@ -22,6 +22,30 @@ git clone git@github.com:sdss/cerebro
 cd cerebro
 pip install .
 ```
+
+## Use
+
+`cerebro` is meant to run as a daemon. The simplest way to run it is simply
+
+```console
+cerebro start
+```
+
+This will run all the sources and use all the observers. You can define a specific profile to use
+
+```console
+cerebro --profile lvm-lab start
+```
+
+or a series of sources
+
+```console
+cerebro --sources lvm_govee_clean_room,lvm_sens4_r1 start
+```
+
+Normally `cerebro` will run in detached/daemon mode. It's also possible to pass the flag `--debug` (`cerebro start --debug`) to run the code in the foreground.
+
+Run `cerebro --help` to get all the options available.
 
 ## Development
 
@@ -38,3 +62,5 @@ pip install poetry
 python create_setup.py
 pip install -e .
 ```
+
+The style code is [black](https://black.readthedocs.io/en/stable/).
