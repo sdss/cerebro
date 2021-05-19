@@ -22,7 +22,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Cerebro ${{ github.ref }}
-          body:
+          body: ""
           draft: false
           prerelease: false
 
