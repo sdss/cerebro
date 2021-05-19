@@ -21,7 +21,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
-    "sdsstools.releases",
+    "myst_parser",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -92,23 +92,17 @@ pygments_style = "sphinx"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = "sdss/cerebro"
-releases_document_name = ["changelog"]
-releases_unstable_prehistory = True
-
 # Intersphinx mappings
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.7", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "drift": ("http://sdss-drift.readthedocs.io/en/latest/", None),
 }
-# 'astropy': ('http://docs.astropy.org/en/latest', None),
-# 'matplotlib': ('https://matplotlib.org/', None),
-# 'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
 
 autodoc_mock_imports = ["_tkinter"]
 autodoc_member_order = "groupwise"
 # autodoc_default_options = {"members": None, "show-inheritance": None}
+autodoc_typehints = "description"
 
 napoleon_use_rtype = False
 napoleon_use_ivar = True

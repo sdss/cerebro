@@ -52,6 +52,7 @@ codecov = ">=2.0.15"
 coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
 black = {version = ">=20.8b1", allow-prereleases = true}
+myst-parser = ">=0.14.0"
 
 [tool.black]
 line-length = 88
