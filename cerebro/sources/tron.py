@@ -81,7 +81,7 @@ class TronSource(Source):
     def stop(self):
         """Closes the connection to Tron."""
 
-        if self.tron and self.tron._client:
+        if self.tron and self.tron.transport:
             self.tron.stop()
 
     async def process_keyword(self, model, keyword):
