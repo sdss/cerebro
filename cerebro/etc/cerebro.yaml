@@ -20,6 +20,26 @@ profiles:
     observers:
       - influxdb
 
+  apo:
+    sources:
+      - tron:
+          type: tron
+          bucket: apo-actors
+          host: sdss-hub.apo.nmsu.edu
+          port: 6093
+          tags:
+            observatory: ${OBSERVATORY}
+          actors:
+            - tcc
+            - apo
+    observers:
+      - influxdb:
+          type: influxdb
+          url: http://10.25.1.221:8086
+          token: null
+          org: apo
+          default_bucket: apo-actors
+
 sources:
   tron:
     type: tron
