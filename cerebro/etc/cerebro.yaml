@@ -32,6 +32,16 @@ profiles:
           actors:
             - tcc
             - apo
+            - alerts
+            - apo
+            - apogee
+            - apogeecal
+            - apogeeql
+            - boss
+            - hartmann
+            - hub
+            - mcp
+
     observers:
       - influxdb:
           type: influxdb
