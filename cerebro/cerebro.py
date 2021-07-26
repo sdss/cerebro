@@ -92,33 +92,31 @@ class SourceList(list):
     def add_source(self, source: Source):
         """Adds a `.Source`."""
 
-        def check_start(task):
-            if task.done():
-                exception = task.exception()
-                if exception:
-                    log.error(
-                        "Failed starting data source " f"{source.name}: {exception!s}"
-                    )
-            else:
-                log.error(f"Timed out trying to start source {source.name}.")
-
         if not isinstance(source, Source):
-            raise NotImplementedError(
-                "Only instances of Source can " "be passed at this point."
-            )
+            raise NotImplementedError("Only instances of Source can be passed.")
 
         source.subscribe(on_next=self.on_next, scheduler=self.scheduler)
 
-        if asyncio.iscoroutinefunction(source.start):
-            timeout = getattr(source, "timeout", None)
-            task = asyncio.create_task(source.start())
-            if timeout:
-                self.loop.call_later(timeout, check_start, task)
-        else:
-            self.loop.call_soon(source.start)
+        assert asyncio.iscoroutinefunction(source.start)
 
+        # We add the source even if it's not running.
         self._source_to_index[source.name] = source
         super().append(source)
+
+        timeout = getattr(source, "timeout", None)
+        asyncio.create_task(self._start_source(source, timeout=timeout))
+
+    async def _start_source(self, source, timeout=None):
+        """Starts the source."""
+
+        try:
+            await asyncio.wait_for(source.start(), timeout=timeout)
+        except asyncio.TimeoutError:
+            log.error(f"Timed out trying to start source {source.name}.")
+            source.running = False
+        except BaseException as exception:
+            log.error(f"Failed starting source {source.name}: {exception!s}")
+            source.running = False
 
     def remove_source(self, source_name):
         """Removes a source."""
@@ -132,7 +130,7 @@ class Cerebellum(type):
 
     def __call__(cls, *args, **kwargs):
         args, kwargs = cls.__parse_config__(*args, **kwargs)
-        obj = Cerebro.__new__(cls)
+        obj = Cerebro.__new__(cls)  # type: ignore
         obj.__init__(*args, **kwargs)
         return obj
 
