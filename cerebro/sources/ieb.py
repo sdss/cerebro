@@ -92,6 +92,7 @@ class IEBSource(Source):
         async with self.ieb:
             pass
 
+        self.running = True
         self._task = asyncio.create_task(self._measure())
 
     async def stop(self):
@@ -101,6 +102,8 @@ class IEBSource(Source):
             with suppress(asyncio.CancelledError):
                 self._task.cancel()
                 await self._task
+
+        self.running = False
 
     async def _measure(self):
         """Schedules measurements."""
