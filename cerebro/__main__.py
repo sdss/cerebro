@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import json
 import os
 import pathlib
 import sys
@@ -14,6 +15,7 @@ import sys
 import click
 from click_default_group import DefaultGroup
 
+from sdsstools._vendor.color_print import color_text
 from sdsstools.daemonizer import DaemonGroup, cli_coro
 
 from cerebro import Cerebro
@@ -66,6 +68,7 @@ async def daemon(ctx):
     """Handle the daemon."""
 
     cerebro = Cerebro(**ctx.obj)
+    await cerebro.start()
 
     # Hacky way to run forever. nest_asyncio has some issues with CLU.
     while True:
@@ -75,6 +78,51 @@ async def daemon(ctx):
             cerebro.stop()
             cerebro.loop.stop()
             return
+
+
+@cerebro.command()
+@cli_coro()
+async def status():
+    """Get the status of the sources."""
+
+    r, w = await asyncio.open_unix_connection("/tmp/cerebro.sock")
+
+    w.write(b"status\n")
+    await w.drain()
+
+    reply = await r.readline()
+    data = json.loads(reply.decode())
+
+    for source in data:
+        value = data[source]
+        value_str = color_text("OK" if value else "NO", "green" if value else "red")
+        print(f"{source}: {value_str}")
+
+    w.close()
+    await w.wait_closed()
+
+
+@cerebro.command()
+@click.argument("SOURCE", type=str)
+@cli_coro()
+async def restart(source):
+    """Restarts a source."""
+
+    print("Restarting ... ", end="", flush=True)
+
+    r, w = await asyncio.open_unix_connection("/tmp/cerebro.sock")
+
+    w.write(b"restart " + source.encode() + b"\n")
+    await w.drain()
+
+    reply = await r.readline()
+    if "true" in reply.decode():
+        print(color_text("SUCCESS", "green"))
+    else:
+        print(color_text("FAILED", "red"))
+
+    w.close()
+    await w.wait_closed()
 
 
 def main():

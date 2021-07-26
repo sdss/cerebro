@@ -11,6 +11,7 @@ from __future__ import annotations
 import abc
 import asyncio
 import datetime
+import json
 import os
 import pathlib
 import socket
@@ -48,7 +49,7 @@ class SourceList(list):
         self.loop = asyncio.get_event_loop()
         self.scheduler = AsyncIOScheduler(self.loop)
 
-        self._source_to_index = {}
+        self._name_to_source = {}
         for source in sources:
             self.add_source(source)
 
@@ -84,10 +85,10 @@ class SourceList(list):
     def get(self, name):
         """Retrieves a data source by name."""
 
-        if name not in self._source_to_index:
+        if name not in self._name_to_source:
             raise ValueError(f"Data source {name!r} not found.")
 
-        return self[self._source_to_index[name]]
+        return self._name_to_source[name]
 
     def add_source(self, source: Source):
         """Adds a `.Source`."""
@@ -100,7 +101,7 @@ class SourceList(list):
         assert asyncio.iscoroutinefunction(source.start)
 
         # We add the source even if it's not running.
-        self._source_to_index[source.name] = source
+        self._name_to_source[source.name] = source
         super().append(source)
 
         timeout = getattr(source, "timeout", None)
@@ -121,8 +122,9 @@ class SourceList(list):
     def remove_source(self, source_name):
         """Removes a source."""
 
-        source = self._source_to_index[source_name]
+        source = self._name_to_source[source_name]
         self.remove(source)
+        self._name_to_source.pop(source_name)
 
 
 class Cerebellum(type):
@@ -306,7 +308,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         The profile sources and observers items can also be dictionaries with the same
         format as the global sources and observers. If ``config`` is defined, the
         keywords ``sources`` and ``observers`` are ignored.
-    profile:
+    profile
         The name of the profile to use from the configuration file. If `None` and
         ``config`` is defined, uses all the global sources and observers.
     ntp_server
@@ -369,10 +371,23 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         self._offset = 0
         self.loop.call_soon(self.update_time_offset, ntp_server)
 
+        self.status_server = None
+
+    async def start(self):
+        """Starts the status file socket."""
+
+        self.status_server = await asyncio.start_unix_server(
+            self.status_server_cb,
+            path="/tmp/cerebro.sock",
+        )
+
     def stop(self):
         """Stops the InfluxDB client and all the sources."""
 
         self.sources.stop()
+
+        if self.status_server is not None:
+            self.status_server.close()
 
     def on_next(self, data):
         """Processes a list of measurements from a data source.
@@ -418,3 +433,36 @@ class Cerebro(Subject, metaclass=MetaCerebro):
             warnings.warn(f"Failed updating offset from NTP server: {ee}", UserWarning)
 
         self.loop.call_later(3600.0, self.update_time_offset, server)
+
+    async def status_server_cb(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ):
+        """Handles new connections to the status server."""
+
+        while True:
+
+            command = await reader.readline()
+            command = command.decode().strip()
+            if reader.at_eof():
+                return None
+
+            if command == "status":
+                status = {source.name: source.running for source in self.sources}
+                writer.write(json.dumps(status, indent=None).encode() + b"\n")
+                await writer.drain()
+
+            elif "restart" in command:
+                source_name = command.split()[1]
+                try:
+                    source = self.sources.get(source_name)
+                    await source.restart()
+                    writer.write(b"true\n")
+                except BaseException:
+                    writer.write(b"false\n")
+
+                await writer.drain()
+
+            elif command == "exit":
+                break

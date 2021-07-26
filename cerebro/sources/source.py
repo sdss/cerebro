@@ -116,6 +116,18 @@ class Source(Subject):
 
         self.running = False
 
+    async def restart(self):
+        """Restarts the source."""
+
+        log.debug(f"{self.name}: restarting source.")
+
+        if asyncio.iscoroutinefunction(self.stop):
+            await self.stop()  # type: ignore
+        else:
+            self.stop
+
+        await self.start()
+
 
 class TCPSource(Source, metaclass=abc.ABCMeta):
     """A source for a TCP server with robust reconnection and error handling.
@@ -199,14 +211,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 self._runner.cancel()
                 await self._runner
             self._runner = None
-
-    async def restart(self):
-        """Restarts the server."""
-
-        log.debug(f"{self.name}: restarting connection.")
-
-        await self.stop()
-        await self.start()
 
     @abc.abstractmethod
     async def _read_internal(self) -> list[dict] | None:
