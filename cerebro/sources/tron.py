@@ -77,12 +77,15 @@ class TronSource(Source):
         """Starts the connection to Tron."""
 
         await self.tron.start(get_keys=False)
+        self.running = True
 
     def stop(self):
         """Closes the connection to Tron."""
 
         if self.tron and self.tron.transport:
             self.tron.stop()
+
+        self.running = False
 
     async def process_keyword(self, model, keyword):
         """Processes a keyword received from Tron."""

@@ -108,6 +108,8 @@ class AMQPSource(Source):
                 )
             )
 
+        self.running = True
+
     async def stop(self):
         """Closes the connection to Tron."""
 
@@ -118,6 +120,8 @@ class AMQPSource(Source):
         self._command_tasks = []
 
         await self.client.stop()
+
+        self.running = False
 
     async def schedule_command(self, command: str, interval: float):
         """Schedules a command to be executed on an interval."""

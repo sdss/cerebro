@@ -83,7 +83,7 @@ class Source(Subject):
         self,
         name: str,
         bucket: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = {},
+        tags: Dict[str, Any] = {},
     ):
 
         if self.source_type is None:
@@ -97,7 +97,7 @@ class Source(Subject):
         self.tags = tags.copy()
         self.tags.update({"source": self.source_type})
 
-        self.loop = asyncio.get_event_loop()
+        self.running = False
 
     async def start(self):
         """Initialises the source.
@@ -109,12 +109,12 @@ class Source(Subject):
 
         """
 
-        pass
+        self.running = True
 
     def stop(self):
         """Stops the data source parsing and closes any open connection."""
 
-        pass
+        self.running = False
 
 
 class TCPSource(Source, metaclass=abc.ABCMeta):
@@ -157,7 +157,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         self.reader: asyncio.StreamReader
         self.writer: asyncio.StreamWriter
 
-        self.running = False
         self._runner: asyncio.Task | None = None
 
     async def start(self):
