@@ -939,7 +939,7 @@ sdsstools = ">=0.2.0"
 
 [[package]]
 name = "sdss-drift"
-version = "0.2.3"
+version = "0.2.4"
 description = "Modbus PLC control library"
 category = "main"
 optional = false
@@ -993,7 +993,7 @@ python-versions = "*"
 
 [[package]]
 name = "sphinx"
-version = "4.1.1"
+version = "4.1.2"
 description = "Python documentation generator"
 category = "dev"
 optional = false
@@ -1208,7 +1208,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "48da16598d81ba869d8d41be31325fb87805b68a2fca9c5f707141e88b490d47"
+content-hash = "5059331a66b554131da87107c98062bb97c3f25bb184246791cb6f503f3d5d60"
 
 [metadata.files]
 aio-pika = [
@@ -1867,8 +1867,8 @@ sdss-clu = [
     {file = "sdss_clu-1.2.1-py3-none-any.whl", hash = "sha256:c37395e1f1a4992ea54b56b6fe420a0fc05cdb0a20630bafcece815b133ffce1"},
 ]
 sdss-drift = [
-    {file = "sdss-drift-0.2.3.tar.gz", hash = "sha256:0a760f4e7504cea5a4358156698280b58fcb25c6d45046c7aa662e7df44523cd"},
-    {file = "sdss_drift-0.2.3-py3-none-any.whl", hash = "sha256:fb9c3f195ec7fe32ecffe039a7a9afc9e192d2ff7403a34d2e501bfdf2573ab7"},
+    {file = "sdss-drift-0.2.4.tar.gz", hash = "sha256:a4cc1553c96e69dfbf0e25070ba5a201789d93cbe1bdc6f3ef61d2f75bce2070"},
+    {file = "sdss_drift-0.2.4-py3-none-any.whl", hash = "sha256:a10e1392faf311345d928037871e8e2fc8f17ebf70145d17d75a1cd6c06ac27c"},
 ]
 sdsstools = [
     {file = "sdsstools-0.4.10-py3-none-any.whl", hash = "sha256:cb2c78d63fe0418f9a27b534f39f283da027ce3801a9053b221446de00d6adf6"},
@@ -1887,8 +1887,8 @@ snowballstemmer = [
     {file = "snowballstemmer-2.1.0.tar.gz", hash = "sha256:e997baa4f2e9139951b6f4c631bad912dfd3c792467e2f03d7239464af90e914"},
 ]
 sphinx = [
-    {file = "Sphinx-4.1.1-py3-none-any.whl", hash = "sha256:3d513088236eef51e5b0adb78b0492eb22cc3b8ccdb0b36dd021173b365d4454"},
-    {file = "Sphinx-4.1.1.tar.gz", hash = "sha256:23c846a1841af998cb736218539bb86d16f5eb95f5760b1966abcd2d584e62b8"},
+    {file = "Sphinx-4.1.2-py3-none-any.whl", hash = "sha256:46d52c6cee13fec44744b8c01ed692c18a640f6910a725cbb938bc36e8d64544"},
+    {file = "Sphinx-4.1.2.tar.gz", hash = "sha256:3092d929cd807926d846018f2ace47ba2f3b671b309c7a89cd3306e80c826b13"},
 ]
 sphinxcontrib-applehelp = [
     {file = "sphinxcontrib-applehelp-1.0.2.tar.gz", hash = "sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58"},
