@@ -95,7 +95,7 @@ async def status():
 
     for source in data:
         value = data[source]
-        value_str = color_text("OK" if value else "NO", "green" if value else "red")
+        value_str = color_text("OK" if value else "FAILED", "green" if value else "red")
         print(f"{source}: {value_str}")
 
     w.close()
