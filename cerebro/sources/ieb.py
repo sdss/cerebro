@@ -108,13 +108,22 @@ class IEBSource(Source):
     async def _measure(self):
         """Schedules measurements."""
 
+        n_errors = 0
+
         while True:
             try:
                 await asyncio.wait_for(self.measure_devices(), timeout=5)
+                n_errors = 0
             except asyncio.TimeoutError:
                 warnings.warn("IEB: timed out measuring devices.", UserWarning)
+                n_errors += 1
             except Exception as err:
                 warnings.warn(f"IEB: unknown exception: {err}", UserWarning)
+                n_errors += 1
+
+            if n_errors >= 5:
+                await self.stop()
+
             await asyncio.sleep(self.delay)
 
     async def measure_devices(self):
