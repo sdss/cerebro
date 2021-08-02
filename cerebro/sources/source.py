@@ -121,10 +121,11 @@ class Source(Subject):
 
         log.debug(f"{self.name}: restarting source.")
 
-        if asyncio.iscoroutinefunction(self.stop):
-            await self.stop()  # type: ignore
-        else:
-            self.stop
+        if self.running is True:
+            if asyncio.iscoroutinefunction(self.stop):
+                await self.stop()  # type: ignore
+            else:
+                self.stop()
 
         await self.start()
 
