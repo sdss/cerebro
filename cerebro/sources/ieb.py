@@ -16,6 +16,7 @@ from typing import List, Optional
 
 from drift import Device, Drift
 
+from .. import log
 from .source import DataPoints, Source
 
 
@@ -108,22 +109,20 @@ class IEBSource(Source):
     async def _measure(self):
         """Schedules measurements."""
 
-        n_errors = 0
+        report_new_errors = True
 
         while True:
             try:
                 await asyncio.wait_for(self.measure_devices(), timeout=5)
-                n_errors = 0
+                report_new_errors = True
             except asyncio.TimeoutError:
-                warnings.warn("IEB: timed out measuring devices.", UserWarning)
-                n_errors += 1
+                if report_new_errors:
+                    log.error("IEB: timed out measuring devices.")
+                report_new_errors = False
             except Exception as err:
-                warnings.warn(f"IEB: unknown exception: {err}", UserWarning)
-                n_errors += 1
-
-            if n_errors >= 5:
-                await self.stop()
-                return
+                if report_new_errors:
+                    log.error(f"IEB: unknown exception: {err}")
+                report_new_errors = False
 
             await asyncio.sleep(self.delay)
 
