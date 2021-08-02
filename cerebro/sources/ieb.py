@@ -123,6 +123,7 @@ class IEBSource(Source):
 
             if n_errors >= 5:
                 await self.stop()
+                return
 
             await asyncio.sleep(self.delay)
 
