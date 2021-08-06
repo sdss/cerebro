@@ -8,6 +8,7 @@ profiles:
       - lvm_govee_clean_room
       - lvm_govee_lab
       - lvm_sens4_r1
+      - lvm_sens4_b1
       - lvm_actors
     observers:
       - influxdb
@@ -90,13 +91,27 @@ sources:
     device_id: 253
     ccd: r1
     bucket: sensors
+  lvm_sens4_b1:
+    type: sens4
+    host: 10.7.45.30
+    port: 1114
+    device_id: 253
+    ccd: b1
+    bucket: sensors
   lvm_actors:
     type: amqp
     bucket: actors
     keywords:
       - archon.status.mod2/tempa
       - archon.status.mod2/tempb
+      - archon.status.mod2/tempc
+      - archon.status.mod12/tempa
+      - archon.status.mod12/tempb
+      - archon.status.mod12/tempc
       - archon.status.mod2/heateraoutput
+      - archon.status.mod2/heaterboutput
+      - archon.status.mod12/heateraoutput
+      - archon.status.mod12/heaterboutput
     commands:
       'archon status': 1
 
