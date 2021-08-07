@@ -9,6 +9,7 @@ profiles:
       - lvm_govee_lab
       - lvm_sens4_r1
       - lvm_sens4_b1
+      - lvm_sens4_z1
       - lvm_actors
     observers:
       - influxdb
@@ -97,6 +98,13 @@ sources:
     port: 1114
     device_id: 253
     ccd: b1
+    bucket: sensors
+  lvm_sens4_z1:
+    type: sens4
+    host: 10.7.45.30
+    port: 1115
+    device_id: 253
+    ccd: z1
     bucket: sensors
   lvm_actors:
     type: amqp
