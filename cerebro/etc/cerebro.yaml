@@ -11,6 +11,7 @@ profiles:
       - lvm_sens4_b1
       - lvm_sens4_z1
       - lvm_actors
+      - lvm_sp1_ieb
     observers:
       - influxdb
   fps-osu:
@@ -122,6 +123,11 @@ sources:
       - archon.status.mod12/heaterboutput
     commands:
       'archon status': 1
+  lvm_sp1_ieb:
+    type: lvm_ieb
+    bucket: sensors
+    controller: sp1
+    config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
 
 observers:
   influxdb:

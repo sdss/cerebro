@@ -14,12 +14,16 @@ from datetime import datetime
 
 from typing import Optional
 
+from drift import Drift
+from sdsstools import read_yaml_file
+
 from cerebro import log
 
+from .ieb import IEBSource
 from .source import TCPSource
 
 
-__all__ = ["GoveeSource", "Sens4Source"]
+__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource"]
 
 
 class GoveeSource(TCPSource):
@@ -153,3 +157,23 @@ class Sens4Source(TCPSource):
         }
 
         return [point]
+
+
+class LVMIEBSource(IEBSource):
+    """A source for the LVM IEB boxes that parses the Archon configuration file."""
+
+    source_type = "lvm_ieb"
+
+    def __init__(self, name: str, controller: str, config: str, **kwargs):
+
+        config_dict = read_yaml_file(config)
+
+        config_data = {"modules": config_dict["devices"]["wago"]["modules"]}
+        config_data.update(config_dict["devices"]["wago"]["controllers"][controller])
+
+        drift = Drift.from_config(config_data)
+
+        tags = kwargs.pop("tags", {})
+        tags.update({"controller": controller})
+
+        super().__init__(name, ieb=drift, tags=tags, **kwargs)
