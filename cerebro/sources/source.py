@@ -245,8 +245,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
             ) as err:
 
                 log.warning(f"{self.name}: {str(err)} Trying to reconnect.")
-                if await self.restart():
-                    return
+                await self.restart()
 
             except asyncio.TimeoutError:
                 log.warning(f"{self.name}: timed out waiting for the server to reply.")
