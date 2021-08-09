@@ -130,7 +130,7 @@ class IEBSource(Source):
         """Reads devices and passes the data to `.Cerebro`."""
 
         data = []
-        print(self.devices)
+
         async with self.ieb:
             for device in self.devices:
                 category = device.category
@@ -150,7 +150,6 @@ class IEBSource(Source):
                         "tags": tags,
                     }
                 )
-                print(data)
 
         data_points = DataPoints(data=data, bucket=self.bucket)
 
