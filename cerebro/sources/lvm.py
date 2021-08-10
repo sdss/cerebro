@@ -131,7 +131,7 @@ class Sens4Source(TCPSource):
         self.writer.write((f"@{self.device_id:d}Q?\\").encode())
         await self.writer.drain()
 
-        data = await asyncio.wait_for(self.reader.readuntil(b"\\"), timeout=5)
+        data = await asyncio.wait_for(self.reader.readuntil(b"\\"), timeout=20)
         data = data.decode()
 
         m = re.match(
