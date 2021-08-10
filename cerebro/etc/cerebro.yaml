@@ -115,7 +115,6 @@ sources:
   lvm_actors:
     type: amqp
     bucket: actors
-    delay: 30
     keywords:
       - archon.status.mod2/tempa
       - archon.status.mod2/tempb
@@ -128,7 +127,7 @@ sources:
       - archon.status.mod12/heateraoutput
       - archon.status.mod12/heaterboutput
     commands:
-      'archon status': 1
+      'archon status': 30
   lvm_sp1_ieb:
     type: lvm_ieb
     bucket: sensors
