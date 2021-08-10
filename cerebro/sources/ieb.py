@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import asyncio
-import warnings
 from contextlib import suppress
 
 from typing import List, Optional
