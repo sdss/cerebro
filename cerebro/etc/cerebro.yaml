@@ -75,6 +75,7 @@ sources:
     device: H5179
     address: 'e0:13:d5:71:d0:66'
     bucket: sensors
+    delay: 30
     tags:
       location: 'Clean room'
   lvm_govee_lab:
@@ -84,6 +85,7 @@ sources:
     device: H5072_1
     address: 'a4:c1:38:82:a2:88'
     bucket: sensors
+    delay: 30
     tags:
       location: 'Outside clean room'
   lvm_sens4_r1:
@@ -92,6 +94,7 @@ sources:
     port: 1112
     device_id: 253
     ccd: r1
+    delay: 30
     bucket: sensors
   lvm_sens4_b1:
     type: sens4
@@ -99,6 +102,7 @@ sources:
     port: 1114
     device_id: 253
     ccd: b1
+    delay: 30
     bucket: sensors
   lvm_sens4_z1:
     type: sens4
@@ -106,10 +110,12 @@ sources:
     port: 1115
     device_id: 253
     ccd: z1
+    delay: 30
     bucket: sensors
   lvm_actors:
     type: amqp
     bucket: actors
+    delay: 30
     keywords:
       - archon.status.mod2/tempa
       - archon.status.mod2/tempb
@@ -127,6 +133,7 @@ sources:
     type: lvm_ieb
     bucket: sensors
     controller: sp1
+    delay: 5
     config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
 
 observers:
