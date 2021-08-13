@@ -233,8 +233,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 if self.reader.at_eof():
                     self.reader.feed_eof()
                     log.warning(f"{self.name}: reader at EOF. Restarting.")
-                    if await self.restart():
-                        return
+                    await self.restart()
 
             except (
                 ConnectionAbortedError,
@@ -253,7 +252,8 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
             except Exception as err:
                 log.warning(f"{self.name}: {str(err)}")
 
-            await asyncio.sleep(self.delay)
+            finally:
+                await asyncio.sleep(self.delay)
 
 
 def get_source_subclass(type_: str) -> Type[Source] | None:
