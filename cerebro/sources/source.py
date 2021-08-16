@@ -167,33 +167,17 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
 
         self.delay = delay or self.delay
 
-        self.reader: asyncio.StreamReader
-        self.writer: asyncio.StreamWriter
+        self.reader: asyncio.StreamReader | None = None
+        self.writer: asyncio.StreamWriter | None = None
 
         self._runner: asyncio.Task | None = None
 
     async def start(self):
         """Connects to the socket."""
 
-        while True:
-            try:
-                self.reader, self.writer = await asyncio.open_connection(
-                    self.host,
-                    self.port,
-                )
-                self.running = True
-                break
-            except (
-                OSError,
-                ConnectionError,
-                ConnectionResetError,
-                ConnectionRefusedError,
-            ) as err:
-                log.warning(f"{self.name}: {err}. Reconnecting in 5 seconds.")
-                await asyncio.sleep(5)
-
-        log.debug(f"{self.name}: connection established.")
         self._runner = asyncio.create_task(self.read())
+
+        await super().start()
 
     async def stop(self):
         """Disconnects from socket."""
@@ -202,10 +186,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
 
         if not self.running:
             raise RuntimeError(f"{self.name}: source is not running.")
-
-        if not self.writer.is_closing():
-            self.writer.close()
-            await self.writer.wait_closed()
 
         with suppress(asyncio.CancelledError):
             if self._runner:
@@ -219,32 +199,44 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
 
         pass
 
-    async def read(self):
+    async def read(self, delay=None):
         """Queries the TCP server, emits data points, and handles disconnections."""
+
+        delay = delay or self.delay
 
         while True:
 
+            # Connect to server
             try:
+                if self.writer and not self.writer.is_closing():
+                    self.writer.close()
+                    await self.writer.wait_closed()
 
-                points = await self._read_internal()
-                if points is not None:
-                    self.on_next(DataPoints(data=points, bucket=self.bucket))
-
-                if self.reader.at_eof():
-                    self.reader.feed_eof()
-                    log.warning(f"{self.name}: reader at EOF. Restarting.")
-                    await self.restart()
+                self.reader, self.writer = await asyncio.open_connection(
+                    self.host,
+                    self.port,
+                )
 
             except (
-                ConnectionAbortedError,
-                ConnectionError,
-                ConnectionRefusedError,
-                ConnectionResetError,
                 OSError,
+                ConnectionError,
+                ConnectionResetError,
+                ConnectionRefusedError,
             ) as err:
+                log.warning(f"{self.name}: {err}. Reconnecting in {delay} seconds.")
+                await asyncio.sleep(delay)
+                continue
 
-                log.warning(f"{self.name}: {str(err)} Trying to reconnect.")
-                await self.restart()
+            except BaseException as err:
+                log.warning(f"{self.name}: Stopping after unknown error {err}.")
+                await self.stop()
+                return
+
+            # Communicate with server
+            try:
+                points = await self._read_internal()
+                if not self.reader.at_eof() and points is not None:
+                    self.on_next(DataPoints(data=points, bucket=self.bucket))
 
             except asyncio.TimeoutError:
                 log.warning(f"{self.name}: timed out waiting for the server to reply.")
@@ -253,7 +245,8 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 log.warning(f"{self.name}: {str(err)}")
 
             finally:
-                await asyncio.sleep(self.delay)
+                self.writer.close()
+                await asyncio.sleep(delay)
 
 
 def get_source_subclass(type_: str) -> Type[Source] | None:
