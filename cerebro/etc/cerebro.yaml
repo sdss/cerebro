@@ -132,7 +132,7 @@ sources:
     type: lvm_ieb
     bucket: sensors
     controller: sp1
-    delay: 5
+    delay: 30
     config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
 
 observers:
