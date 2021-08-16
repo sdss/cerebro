@@ -51,6 +51,9 @@ class GoveeSource(TCPSource):
 
     async def _read_internal(self) -> list[dict] | None:
 
+        if not self.writer or not self.reader:
+            return
+
         self.writer.write((f"status {self.address}\n").encode())
         await self.writer.drain()
 
@@ -128,10 +131,13 @@ class Sens4Source(TCPSource):
 
     async def _read_internal(self) -> list[dict] | None:
 
+        if not self.writer or not self.reader:
+            return
+
         self.writer.write((f"@{self.device_id:d}Q?\\").encode())
         await self.writer.drain()
 
-        data = await asyncio.wait_for(self.reader.readuntil(b"\\"), timeout=20)
+        data = await asyncio.wait_for(self.reader.readuntil(b"\\"), timeout=5)
         data = data.decode()
 
         m = re.match(
