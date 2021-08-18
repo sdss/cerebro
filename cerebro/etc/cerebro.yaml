@@ -12,6 +12,7 @@ profiles:
       - lvm_sens4_z1
       - lvm_actors
       - lvm_sp1_ieb
+      - ln2_scale_sp1
     observers:
       - influxdb
   fps-osu:
@@ -134,6 +135,12 @@ sources:
     controller: sp1
     delay: 30
     config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
+  ln2_scale_sp1:
+    type: ln2_scale
+    host: 10.7.45.45
+    port: 10001
+    bucket: sensors
+    delay: 30
 
 observers:
   influxdb:

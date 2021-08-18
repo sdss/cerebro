@@ -183,3 +183,48 @@ class LVMIEBSource(IEBSource):
         tags.update({"controller": controller})
 
         super().__init__(name, ieb=drift, tags=tags, **kwargs)
+
+
+class LN2Scale(TCPSource):
+
+    source_type = "ln2_scale"
+
+    def __init__(
+        self,
+        *args,
+        delay: float = 1,
+        **kwargs,
+    ):
+
+        super().__init__(*args, **kwargs)
+
+        self.delay = delay
+        self.bucket = self.bucket or "sensors"
+
+    async def _read_internal(self) -> list[dict] | None:
+
+        if not self.writer or not self.reader:
+            return
+
+        self.writer.write(("~*P*~\n").encode())
+        await self.writer.drain()
+
+        data = await asyncio.wait_for(self.reader.readline(), timeout=5)
+        data = data.decode()
+
+        m = re.search(r"\s([0-9.]+)\slb", data)
+        if not m:
+            raise ValueError("Reply from device cannot be parsed.")
+
+        weigth = float(m.group(1))
+
+        tags = self.tags.copy()
+        tags["spectrograph"] = "sp1"
+
+        point = {
+            "measurement": "ln2_weigth",
+            "fields": {"value": weigth},
+            "tags": tags,
+        }
+
+        return [point]
