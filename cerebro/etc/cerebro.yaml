@@ -140,7 +140,7 @@ sources:
     host: 10.7.45.45
     port: 10001
     bucket: sensors
-    delay: 30
+    delay: 300
 
 observers:
   influxdb:
