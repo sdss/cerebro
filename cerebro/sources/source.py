@@ -208,7 +208,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
 
             # Connect to server
             try:
-                if self.writer and not self.writer.is_closing():
+                if self.writer and self.writer.is_closing():
                     self.writer.close()
                     await self.writer.wait_closed()
 
@@ -246,6 +246,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
 
             finally:
                 self.writer.close()
+                await self.writer.wait_closed()
                 await asyncio.sleep(delay)
 
 
