@@ -142,6 +142,7 @@ class IEBSource(Source):
                 tags = self.tags.copy()
                 if units:
                     tags.update({"units": units})
+                tags.update({"offset": device.offset})
                 data.append(
                     {
                         "measurement": category,
