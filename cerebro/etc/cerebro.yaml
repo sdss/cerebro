@@ -15,6 +15,13 @@ profiles:
       - ln2_scale_sp1
     observers:
       - influxdb
+      - influxdb_cloud:
+          type: influxdb
+          url: https://europe-west1-1.gcp.cloud2.influxdata.com
+          token: ${INFLUXDB_CLOUD_TOKEN}
+          org: c61507bd4e709b18
+          default_bucket: sensors
+
   fps-osu:
     sources:
       - ieb:
