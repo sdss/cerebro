@@ -31,6 +31,15 @@ profiles:
     observers:
       - influxdb
 
+  fps-apo:
+    sources:
+      - ieb:
+          type: ieb
+          bucket: FPS
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+    observers:
+      - influxdb_apo
+
   apo:
     sources:
       - tron:
@@ -156,3 +165,9 @@ observers:
     token: null
     org: SDSS
     default_bucket: Actors
+  influxdb_apo:
+    type: influxdb
+    url: http://sdss5-influx.apo.nmsu.edu:8086
+    token: null
+    org: apo
+    default_bucket: FPS
