@@ -6,7 +6,11 @@
 # @Filename: tron.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
+import asyncio
 import warnings
+from contextlib import suppress
 
 from typing import Any, Dict, List, Optional
 
@@ -62,12 +66,16 @@ class TronSource(Source):
         host: str = "localhost",
         port: int = 6093,
         keywords: Optional[List[str]] = None,
+        commands: dict[str, float] = {},
     ):
 
         super().__init__(name, bucket=bucket, tags=tags)
 
         self.tron = TronConnection(host, port, models=actors)
         self.keywords = keywords
+
+        self.commands = commands
+        self._command_tasks: list[asyncio.Task] = []
 
         for model_name in self.tron.models:
             model = self.tron.models[model_name]
@@ -77,23 +85,50 @@ class TronSource(Source):
         """Starts the connection to Tron."""
 
         await self.tron.start(get_keys=False)
+
+        for command in self.commands:
+            self._command_tasks.append(
+                asyncio.create_task(
+                    self.schedule_command(
+                        command,
+                        self.commands[command],
+                    )
+                )
+            )
+
         self.running = True
 
-    def stop(self):
+    async def schedule_command(self, command: str, interval: float):
+        """Schedules a command to be executed on an interval."""
+
+        actor = command.split(" ")[0]
+        cmd_str = " ".join(command.split(" ")[1:])
+
+        while True:
+            await (await self.tron.send_command(actor, cmd_str))
+            await asyncio.sleep(interval)
+
+    async def stop(self):
         """Closes the connection to Tron."""
+
+        for task in self._command_tasks:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+        self._command_tasks = []
 
         if self.tron and self.tron.transport:
             self.tron.stop()
 
         self.running = False
 
-    async def process_keyword(self, model, keyword):
+    async def process_keyword(self, _, keyword):
         """Processes a keyword received from Tron."""
 
         key = keyword.keyword
         name = keyword.name
 
-        actor = model.name
+        actor = keyword.model.name
 
         if self.keywords:
             if actor in self.keywords and name in self.keywords[actor]:
