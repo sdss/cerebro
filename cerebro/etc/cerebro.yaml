@@ -31,44 +31,23 @@ profiles:
     observers:
       - influxdb
 
-  fps-apo:
+  apo:
     sources:
       - ieb:
           type: ieb
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
-    observers:
-      - influxdb_apo
-
-  apo:
-    sources:
       - tron:
           type: tron
           bucket: apo-actors
-          host: sdss-hub.apo.nmsu.edu
+          host: sdss5-hub.apo.nmsu.edu
           port: 6093
           tags:
             observatory: ${OBSERVATORY}
           actors:
-            - tcc
-            - apo
-            - alerts
-            - apo
-            - apogee
-            - apogeecal
-            - apogeeql
-            - boss
-            - hartmann
-            - hub
-            - mcp
-
+            - fliswarm
     observers:
-      - influxdb:
-          type: influxdb
-          url: http://10.25.1.221:8086
-          token: null
-          org: apo
-          default_bucket: apo-actors
+      - influxdb_apo
 
 sources:
   tron:
