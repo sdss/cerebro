@@ -71,7 +71,7 @@ class TronSource(Source):
 
         super().__init__(name, bucket=bucket, tags=tags)
 
-        self.tron = TronConnection(host, port, models=actors)
+        self.tron = TronConnection(f'cerebro.{name}', host, port, models=actors)
         self.keywords = keywords
 
         self.commands = commands
