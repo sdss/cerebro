@@ -34,9 +34,13 @@ profiles:
   apo:
     sources:
       - ieb:
-          type: ieb
+          type: drift
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+      - chiller:
+          type: drift
+          bucket: FPS
+          config: ${JAEGER_DIR}/python/jaeger/etc/chiller.yaml
       - tron:
           type: tron
           bucket: apo-actors
@@ -48,7 +52,6 @@ profiles:
             - fliswarm
           commands:
             'fliswarm talk status': 60
-
     observers:
       - influxdb_apo
 
@@ -64,7 +67,7 @@ sources:
       - tcc
       - apo
   ieb:
-    type: ieb
+    type: drift
     bucket: IEB
     config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
   lvm_govee_clean_room:
