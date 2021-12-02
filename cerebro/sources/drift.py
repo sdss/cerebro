@@ -19,11 +19,11 @@ from .. import log
 from .source import DataPoints, Source
 
 
-__all__ = ["IEBSource"]
+__all__ = ["DriftSource"]
 
 
-class IEBSource(Source):
-    """A data source that connects to an Instrument Electronics Box.
+class DriftSource(Source):
+    """A data source that uses a Drift configuration file.
 
     Uses `drift <https://sdss-drift.readthedocs.io/en/latest/>`__ to connect
     to a Modbus ethernet module and read a series of devices.
@@ -32,9 +32,9 @@ class IEBSource(Source):
     ----------
     name
         The name of the data source.
-    ieb
+    drift_instance
         An instance of :py:class:`~drift.drift.Drift` with the connection to
-        the IEB Modbus controller to use.
+        the Modbus controller to use.
     config
         The path to a configuration file that can be loaded using
         `~drift.drift.Drift.from_config`.
@@ -47,12 +47,12 @@ class IEBSource(Source):
 
     """
 
-    source_type = "ieb"
+    source_type = "drift"
 
     def __init__(
         self,
         name: str,
-        ieb: Optional[Drift] = None,
+        drift_instance: Optional[Drift] = None,
         config: Optional[str] = None,
         devices: Optional[List[str]] = None,
         delay: float = 5.0,
@@ -61,35 +61,35 @@ class IEBSource(Source):
 
         super().__init__(name, **kwargs)
 
-        if ieb and config:
-            raise ValueError("Only one of ieb or config can be defined.")
+        if drift_instance and config:
+            raise ValueError("Only one of drift_instance or config can be defined.")
 
-        if ieb:
-            self.ieb = ieb
+        if drift_instance:
+            self.drift_instance = drift_instance
         elif config:
-            self.ieb = Drift.from_config(config)
+            self.drift_instance = Drift.from_config(config)
         else:
-            raise ValueError("Either ieb or config are needed.")
+            raise ValueError("Either drift_instance or config are needed.")
 
         self.devices: List[Device]
         if devices is None:
             self.devices = [
                 device
-                for module in self.ieb.modules
-                for device in self.ieb[module].devices.values()
+                for module in self.drift_instance.modules
+                for device in self.drift_instance[module].devices.values()
             ]
         else:
-            self.devices = [self.ieb.get_device(device) for device in devices]
+            self.devices = [self.drift_instance.get_device(device) for device in devices]
 
         self.delay = delay
 
         self._task: asyncio.Task | None = None
 
     async def start(self):
-        """Starts and tests the connection to the IEB and begins monitoring."""
+        """Starts and tests the connection to the device(s) and begins monitoring."""
 
         # Test connection
-        async with self.ieb:
+        async with self.drift_instance:
             pass
 
         self.running = True
@@ -130,7 +130,7 @@ class IEBSource(Source):
 
         data = []
 
-        async with self.ieb:
+        async with self.drift_instance:
             for device in self.devices:
                 category = device.category
                 if category is None:

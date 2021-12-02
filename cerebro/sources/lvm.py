@@ -19,7 +19,7 @@ from sdsstools import read_yaml_file
 
 from cerebro import log
 
-from .ieb import IEBSource
+from .drift import DriftSource
 from .source import TCPSource
 
 
@@ -165,7 +165,7 @@ class Sens4Source(TCPSource):
         return [point]
 
 
-class LVMIEBSource(IEBSource):
+class LVMIEBSource(DriftSource):
     """A source for the LVM IEB boxes that parses the Archon configuration file."""
 
     source_type = "lvm_ieb"
