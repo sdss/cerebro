@@ -41,6 +41,7 @@ profiles:
           type: drift
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/chiller.yaml
+          measure_timeout: 15.0
       - tron:
           type: tron
           bucket: apo-actors

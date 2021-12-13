@@ -42,6 +42,8 @@ class DriftSource(Source):
         A list of devices to monitor, with the format ``<module>.<device>``.
     delay
         The delay between measurements of the devices, in seconds.
+    measure_timeout:
+        Timeout while measuring.
     kwargs
         Other arguments to pass to `.Source`.
 
@@ -56,6 +58,7 @@ class DriftSource(Source):
         config: Optional[str] = None,
         devices: Optional[List[str]] = None,
         delay: float = 5.0,
+        measure_timeout: float = 5.0,
         **kwargs,
     ):
 
@@ -79,9 +82,12 @@ class DriftSource(Source):
                 for device in self.drift_instance[module].devices.values()
             ]
         else:
-            self.devices = [self.drift_instance.get_device(device) for device in devices]
+            self.devices = [
+                self.drift_instance.get_device(device) for device in devices
+            ]
 
         self.delay = delay
+        self.measure_timeout = measure_timeout
 
         self._task: asyncio.Task | None = None
 
@@ -109,18 +115,19 @@ class DriftSource(Source):
         """Schedules measurements."""
 
         report_new_errors = True
+        timeout = self.measure_timeout
 
         while True:
             try:
-                await asyncio.wait_for(self.measure_devices(), timeout=5)
+                await asyncio.wait_for(self.measure_devices(), timeout=timeout)
                 report_new_errors = True
             except asyncio.TimeoutError:
                 if report_new_errors:
-                    log.error("IEB: timed out measuring devices.")
+                    log.error(f"{self.name}: timed out measuring devices.")
                 report_new_errors = False
             except Exception as err:
                 if report_new_errors:
-                    log.error(f"IEB: unknown exception: {err}")
+                    log.error(f"{self.name}: unknown exception: {err}")
                 report_new_errors = False
 
             await asyncio.sleep(self.delay)
