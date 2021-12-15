@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 - December 15, 2021
+
+### 🚀 New
+
+* Profiles for APO and LVM lab testing. General improvements.
+
+
 ## 0.1.1 - May 19, 2021
 
 ### 🚀 New
