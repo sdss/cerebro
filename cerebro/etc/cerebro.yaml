@@ -44,13 +44,27 @@ profiles:
           measure_timeout: 15.0
       - tron:
           type: tron
-          bucket: apo-actors
+          bucket: actors
           host: sdss5-hub.apo.nmsu.edu
           port: 6093
           tags:
             observatory: ${OBSERVATORY}
           actors:
+            - mcp
+            - apogeecal
+            - apogeebpr
+            - hartmann
+            - apo
             - fliswarm
+            - apogeefpi
+            - tcc
+            - apogee
+            - boss
+            - alerts
+            - apogeeql
+            - hal
+            - cherno
+            - jaeger
           commands:
             'fliswarm talk status': 60
     observers:
