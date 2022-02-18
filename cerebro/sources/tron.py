@@ -67,6 +67,7 @@ class TronSource(Source):
         port: int = 6093,
         keywords: Optional[List[str]] = None,
         commands: dict[str, float] = {},
+        casts: dict[str, str] = {},
     ):
 
         super().__init__(name, bucket=bucket, tags=tags)
@@ -76,6 +77,8 @@ class TronSource(Source):
 
         self.commands = commands
         self._command_tasks: list[asyncio.Task] = []
+
+        self.casts = casts
 
         for model_name in self.tron.models:
             model = self.tron.models[model_name]
@@ -170,20 +173,15 @@ class TronSource(Source):
 
             else:
                 parsed = native
-                if isinstance(native, str):
-                    if len(native) == 1 and native.lower() in ["t", "f"]:
-                        if native.lower() == "t":
-                            parsed = 1
-                        else:
-                            parsed = 0
-                    else:
-                        try:
-                            parsed = int(native)
-                        except ValueError:
-                            try:
-                                parsed = float(native)
-                            except ValueError:
-                                pass
+
+                if f"{actor}.{name}{key_name}" in self.casts:
+                    cast = self.casts[f"{actor}.{name}{key_name}"]
+                    if cast == "int":
+                        parsed = int(native)
+                    elif cast == "float":
+                        parsed = float(native)
+                    elif cast == "bool":
+                        parsed = bool(native)
 
                 fields = {f"{name}{key_name}": parsed}
 
