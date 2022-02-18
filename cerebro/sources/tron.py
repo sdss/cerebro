@@ -169,7 +169,23 @@ class TronSource(Source):
                     continue
 
             else:
-                fields = {f"{name}{key_name}": native}
+                parsed = native
+                if isinstance(native, str):
+                    if len(native) == 1 and native.lower() in ["t", "f"]:
+                        if native.lower() == "t":
+                            parsed = 1
+                        else:
+                            parsed = 0
+                    else:
+                        try:
+                            parsed = int(native)
+                        except ValueError:
+                            try:
+                                parsed = float(native)
+                            except ValueError:
+                                pass
+
+                fields = {f"{name}{key_name}": parsed}
 
             points.append({"measurement": actor, "tags": self.tags, "fields": fields})
 
