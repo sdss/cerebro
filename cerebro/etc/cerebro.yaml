@@ -37,11 +37,13 @@ profiles:
           type: drift
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+          delay: 30
       - chiller:
           type: drift
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/chiller.yaml
-          measure_timeout: 15.0
+          delay: 30
+          measure_timeout: 30.0
       - tron:
           type: tron
           bucket: actors
