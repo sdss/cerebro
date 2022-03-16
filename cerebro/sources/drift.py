@@ -94,10 +94,6 @@ class DriftSource(Source):
     async def start(self):
         """Starts and tests the connection to the device(s) and begins monitoring."""
 
-        # Test connection
-        async with self.drift_instance:
-            pass
-
         self.running = True
         self._task = asyncio.create_task(self._measure())
 
