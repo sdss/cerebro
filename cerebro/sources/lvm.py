@@ -182,7 +182,7 @@ class LVMIEBSource(DriftSource):
         tags = kwargs.pop("tags", {})
         tags.update({"controller": controller})
 
-        super().__init__(name, ieb=drift, tags=tags, **kwargs)
+        super().__init__(name, drift_instance=drift, tags=tags, **kwargs)
 
 
 class LN2Scale(TCPSource):
