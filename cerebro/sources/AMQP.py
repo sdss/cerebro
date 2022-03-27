@@ -137,7 +137,7 @@ class AMQPSource(Source):
         """Processes a keyword received from Tron."""
 
         name = keyword.name
-        actor = model.name
+        actor = keyword.model.name
 
         if name not in self._actor_keys[actor]:
             return
