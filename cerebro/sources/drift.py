@@ -116,15 +116,12 @@ class DriftSource(Source):
         while True:
             try:
                 await asyncio.wait_for(self.measure_devices(), timeout=timeout)
-                report_new_errors = True
             except asyncio.TimeoutError:
                 if report_new_errors:
                     log.error(f"{self.name}: timed out measuring devices.")
-                report_new_errors = False
             except Exception as err:
                 if report_new_errors:
                     log.error(f"{self.name}: unknown exception: {err}")
-                report_new_errors = False
 
             await asyncio.sleep(self.delay)
 
@@ -138,7 +135,13 @@ class DriftSource(Source):
                 category = device.category
                 if category is None:
                     continue
-                value, units = await device.read(adapt=True, connect=False)
+
+                try:
+                    value, units = await device.read(adapt=True, connect=False)
+                except Exception as err:
+                    log.error(f'{self.name}: failed reaing device {device.name}: {err}')
+                    continue
+
                 if device.__type__ == "relay":
                     value = True if value == "closed" else False
                     units = None
