@@ -12,6 +12,7 @@ profiles:
       - lvm_sens4_z1
       - lvm_actors
       - lvm_sp1_ieb
+      - lvm_sp2_ieb
       - ln2_scale_sp1
     observers:
       - influxdb
@@ -151,6 +152,12 @@ sources:
     type: lvm_ieb
     bucket: sensors
     controller: sp1
+    delay: 30
+    config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
+  lvm_sp2_ieb:
+    type: lvm_ieb
+    bucket: sensors
+    controller: sp2
     delay: 30
     config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
   ln2_scale_sp1:
