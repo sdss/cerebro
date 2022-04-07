@@ -46,6 +46,10 @@ class AMQPSource(Source):
         A list of keyword values to output. The format must be
         ``actor.keyword.subkeyword.subsubkeyword``. The final value extracted
         must be a scalar.
+    groupers
+        A list of subkeywords that, if found, will be added as tags to the
+        measurement. These are useful when the same keyword can be output
+        for different devices or controllers.
     commands
         A mapping of commands to be issued to the interval, in seconds. For
         example ``{"archon status": 5}``.
@@ -65,6 +69,7 @@ class AMQPSource(Source):
         user: str = "guest",
         password: str = "guest",
         keywords: list[str] = [],
+        groupers: list[str] = [],
         commands: dict[str, float] = {},
     ):
 
@@ -82,6 +87,7 @@ class AMQPSource(Source):
         )
 
         self.keywords = keywords
+        self.groupers = groupers
         self._actor_keys = {
             actor: [key.split(".")[1] for key in keywords if key.startswith(actor)]
             for actor in key_actors
@@ -148,7 +154,7 @@ class AMQPSource(Source):
             if not key.startswith(actor) or key.split(".")[1] != name:
                 continue
 
-            value = keyword.value
+            value = keyword.value  # In case it's a scalar.
             try:
                 subchunks = key.split(".")[2:]
                 field_name = ".".join(subchunks)
@@ -160,10 +166,16 @@ class AMQPSource(Source):
                 log.warning(f"{self.name}: {err}")
                 return
 
+            tags = self.tags.copy()
+            if isinstance(keyword.value, dict):
+                for grouper in self.groupers:
+                    if grouper in keyword.value:
+                        tags[grouper] = keyword.value[grouper]
+
             points.append(
                 {
                     "measurement": actor,
-                    "tags": self.tags,
+                    "tags": tags,
                     "fields": {field_name: value},
                 }
             )

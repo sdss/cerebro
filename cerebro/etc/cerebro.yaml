@@ -146,6 +146,8 @@ sources:
       - archon.status.mod2/heaterboutput
       - archon.status.mod12/heateraoutput
       - archon.status.mod12/heaterboutput
+    groupers:
+      - controller
     commands:
       'archon status': 30
   lvm_sp1_ieb:
