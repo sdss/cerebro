@@ -10,6 +10,7 @@ profiles:
       - lvm_sens4_r1
       - lvm_sens4_b1
       - lvm_sens4_z1
+      - lvm_sens4_b2
       - lvm_actors
       - lvm_sp1_ieb
       - lvm_sp2_ieb
@@ -130,6 +131,14 @@ sources:
     port: 1115
     device_id: 253
     ccd: z1
+    delay: 30
+    bucket: sensors
+  lvm_sens4_b2:
+    type: sens4
+    host: 10.7.45.33
+    port: 1114
+    device_id: 253
+    ccd: b2
     delay: 30
     bucket: sensors
   lvm_actors:
