@@ -7,22 +7,25 @@ profiles:
     sources:
       - lvm_govee_clean_room
       - lvm_govee_lab
-      - lvm_sens4_r1
-      - lvm_sens4_b1
-      - lvm_sens4_z1
+      # - lvm_sens4_r1
+      # - lvm_sens4_b1
+      # - lvm_sens4_z1
+      - lvm_sens4_r2
       - lvm_sens4_b2
+      - lvm_sens4_z2
       - lvm_actors
-      - lvm_sp1_ieb
+      # - lvm_sp1_ieb
       - lvm_sp2_ieb
       - ln2_scale_sp1
     observers:
       - influxdb
-      - influxdb_cloud:
-          type: influxdb
-          url: https://europe-west1-1.gcp.cloud2.influxdata.com
-          token: ${INFLUXDB_CLOUD_TOKEN}
-          org: c61507bd4e709b18
-          default_bucket: sensors
+      - influxdb_cloud
+
+  boss-lab:
+    sources:
+      - boss_tron
+    observers:
+      - influxdb
 
   fps-osu:
     sources:
@@ -133,12 +136,28 @@ sources:
     ccd: z1
     delay: 30
     bucket: sensors
+  lvm_sens4_r2:
+    type: sens4
+    host: 10.7.45.33
+    port: 1112
+    device_id: 253
+    ccd: r2
+    delay: 30
+    bucket: sensors
   lvm_sens4_b2:
     type: sens4
     host: 10.7.45.33
     port: 1114
     device_id: 253
     ccd: b2
+    delay: 30
+    bucket: sensors
+  lvm_sens4_z2:
+    type: sens4
+    host: 10.7.45.33
+    port: 1115
+    device_id: 253
+    ccd: z2
     delay: 30
     bucket: sensors
   lvm_actors:
@@ -177,6 +196,17 @@ sources:
     port: 10001
     bucket: sensors
     delay: 300
+  boss_tron:
+    type: tron
+    bucket: boss
+    host: obsvld01
+    port: 6093
+    tags:
+      observatory: ${OBSERVATORY}
+    actors:
+      - yao
+    commands:
+      'yao status': 60
 
 observers:
   influxdb:
@@ -191,3 +221,9 @@ observers:
     token: null
     org: apo
     default_bucket: FPS
+  influxdb_cloud:
+    type: influxdb
+    url: https://europe-west1-1.gcp.cloud2.influxdata.com
+    token: ${INFLUXDB_CLOUD_TOKEN}
+    org: c61507bd4e709b18
+    default_bucket: sensors

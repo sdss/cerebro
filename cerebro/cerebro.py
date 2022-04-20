@@ -22,8 +22,8 @@ import warnings
 from typing import Any, Dict, List, Optional
 
 import ntplib
-from rx.scheduler.eventloop import AsyncIOScheduler
-from rx.subject import Subject
+from rx.scheduler.eventloop.asyncioscheduler import AsyncIOScheduler
+from rx.subject.subject import Subject
 
 from sdsstools import read_yaml_file
 

@@ -17,8 +17,8 @@ from typing import Optional, Type
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import ASYNCHRONOUS
 from influxdb_client.rest import ApiException
-from rx.core import Observer as RXObserver
-from rx.scheduler.eventloop import AsyncIOScheduler
+from rx.core.observer.observer import Observer as RXObserver
+from rx.scheduler.eventloop.asyncioscheduler import AsyncIOScheduler
 
 from . import log
 

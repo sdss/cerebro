@@ -38,12 +38,19 @@ else:
     type=click.Path(exists=True, dir_okay=False),
     help="Absolute path to config file. Defaults to internal config.",
 )
-@click.option("--profile", "-p", type=str, help="The profile to use.")
+@click.option(
+    "--profile",
+    "-p",
+    "profiles",
+    type=str,
+    multiple=True,
+    help="The profile to use.",
+)
 @click.pass_context
-def cerebro(ctx, sources, config, profile):
+def cerebro(ctx, sources, config, profiles):
     """Command Line Interface for cerebro."""
 
-    if sources and profile:
+    if sources and profiles:
         raise click.UsageError("--sources and --profile are mutually exclusive.")
 
     if not config:
@@ -53,7 +60,7 @@ def cerebro(ctx, sources, config, profile):
 
     sources = sources.split(",") if sources else []
 
-    ctx.obj = {"sources": sources, "config": config, "profile": profile}
+    ctx.obj = {"sources": sources, "config": config, "profiles": profiles}
 
 
 @cerebro.group(
@@ -67,16 +74,24 @@ def cerebro(ctx, sources, config, profile):
 async def daemon(ctx):
     """Handle the daemon."""
 
-    cerebro = Cerebro(**ctx.obj)
-    await cerebro.start()
+    config = ctx.obj['config']
+
+    if "profiles" in ctx.obj:
+        profiles = ctx.obj["profiles"]
+        cerebros = [Cerebro(config=config, profile=profile) for profile in profiles]
+    else:
+        cerebros = [Cerebro(**ctx.obj)]
+
+    await asyncio.gather(*[cerebro.start() for cerebro in cerebros])
 
     # Hacky way to run forever. nest_asyncio has some issues with CLU.
     while True:
         try:
             await asyncio.sleep(60)
         except KeyboardInterrupt:
-            cerebro.stop()
-            cerebro.loop.stop()
+            for cerebro in cerebros:
+                cerebro.stop()
+                cerebro.loop.stop()
             return
 
 
