@@ -186,6 +186,7 @@ class LVMIEBSource(DriftSource):
 
 
 class LN2Scale(TCPSource):
+    """Check the measurement of the LN2 scale."""
 
     source_type = "ln2_scale"
 
