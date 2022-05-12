@@ -206,7 +206,7 @@ sources:
     actors:
       - yao
     commands:
-      'yao status': 60
+      'yao status': 3
 
 observers:
   influxdb:
