@@ -193,6 +193,8 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 await self._runner
             self._runner = None
 
+        super().stop()
+
     @abc.abstractmethod
     async def _read_internal(self) -> list[dict] | None:
         """Queries the TCP server and returns a list of points."""
