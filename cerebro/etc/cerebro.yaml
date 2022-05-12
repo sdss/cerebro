@@ -17,6 +17,7 @@ profiles:
       # - lvm_sp1_ieb
       - lvm_sp2_ieb
       - ln2_scale_sp1
+      - lvm_spec_in_use
     observers:
       - influxdb
       - influxdb_cloud
@@ -196,6 +197,11 @@ sources:
     port: 10001
     bucket: sensors
     delay: 30
+  lvm_spec_in_use:
+    type: check_file_exists
+    file: /home/lvm/.config/sdss/spec_in_use
+    bucket: sensors
+    delay: 10
   boss_tron:
     type: tron
     bucket: boss

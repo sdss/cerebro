@@ -9,10 +9,12 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import re
+from contextlib import suppress
 from datetime import datetime
 
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from drift import Drift
 from sdsstools import read_yaml_file
@@ -20,7 +22,7 @@ from sdsstools import read_yaml_file
 from cerebro import log
 
 from .drift import DriftSource
-from .source import TCPSource
+from .source import DataPoints, Source, TCPSource
 
 
 __all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource"]
@@ -229,3 +231,73 @@ class LN2Scale(TCPSource):
         }
 
         return [point]
+
+
+class CheckFileExistsSource(Source):
+    """Checks if a file exists."""
+
+    source_type = "check_file_exists"
+    delay = 60
+
+    def __init__(
+        self,
+        name: str,
+        file: str,
+        bucket: str = "sensors",
+        tags: Dict[str, Any] = {},
+        delay: Optional[float] = None,
+    ):
+
+        super().__init__(name, bucket=bucket, tags=tags)
+
+        self.file = file
+        self.delay = delay or self.delay
+
+        self._runner: asyncio.Task | None = None
+
+    async def start(self):
+        """Connects to the socket."""
+
+        self._runner = asyncio.create_task(self.check_file())
+
+        await super().start()
+
+    async def stop(self):
+        """Disconnects from socket."""
+
+        log.debug(f"{self.name}: stopping connection.")
+
+        if not self.running:
+            raise RuntimeError(f"{self.name}: source is not running.")
+
+        with suppress(asyncio.CancelledError):
+            if self._runner:
+                self._runner.cancel()
+                await self._runner
+            self._runner = None
+
+        super().stop()
+
+    async def check_file(self):
+        """Checks if the file exist."""
+
+        while True:
+            file_exists = os.path.exists(self.file)
+
+            tags = self.tags.copy()
+            tags["full_path"] = self.file
+
+            self.on_next(
+                DataPoints(
+                    data=[
+                        {
+                            "measurement": "file_exists",
+                            "fields": {os.path.basename(self.file): int(file_exists)},
+                            "tags": tags,
+                        }
+                    ],
+                    bucket=self.bucket,
+                )
+            )
+
+            await asyncio.sleep(self.delay)
