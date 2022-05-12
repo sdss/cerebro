@@ -195,7 +195,7 @@ sources:
     host: 10.7.45.45
     port: 10001
     bucket: sensors
-    delay: 300
+    delay: 30
   boss_tron:
     type: tron
     bucket: boss
