@@ -184,13 +184,13 @@ sources:
     bucket: sensors
     controller: sp1
     delay: 30
-    config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
+    config: ${LVMIEB_DIR}/python/lvmieb/etc/lvmieb.yml
   lvm_sp2_ieb:
     type: lvm_ieb
     bucket: sensors
     controller: sp2
     delay: 30
-    config: ${ARCHON_DIR}/archon/lvm/config/lvm.yaml
+    config: ${LVMIEB_DIR}/python/lvmieb/etc/lvmieb.yml
   ln2_scale_sp1:
     type: ln2_scale
     host: 10.7.45.45

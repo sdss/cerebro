@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import os
 import re
 from contextlib import suppress
@@ -174,10 +175,10 @@ class LVMIEBSource(DriftSource):
 
     def __init__(self, name: str, controller: str, config: str, **kwargs):
 
-        config_dict = read_yaml_file(config)
+        config_dict = copy.deepcopy(read_yaml_file(config))
 
-        config_data = {"modules": config_dict["devices"]["wago"]["modules"]}
-        config_data.update(config_dict["devices"]["wago"]["controllers"][controller])
+        config_data = {"modules": config_dict["wago_modules"]}
+        config_data.update(config_dict["specs"][controller]["wago"])
 
         drift = Drift.from_config(config_data)
 
