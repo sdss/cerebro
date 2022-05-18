@@ -216,7 +216,7 @@ class LN2Scale(TCPSource):
         data = await asyncio.wait_for(self.reader.readline(), timeout=5)
         data = data.decode()
 
-        m = re.search(r"\s([0-9.]+)\slb", data)
+        m = re.search(r"\s([\-0-9.]+)\slb", data)
         if not m:
             raise ValueError("Reply from device cannot be parsed.")
 
