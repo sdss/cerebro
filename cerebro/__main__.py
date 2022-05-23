@@ -74,7 +74,7 @@ def cerebro(ctx, sources, config, profiles):
 async def daemon(ctx):
     """Handle the daemon."""
 
-    config = ctx.obj['config']
+    config = ctx.obj["config"]
 
     if "profiles" in ctx.obj:
         profiles = ctx.obj["profiles"]

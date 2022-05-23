@@ -139,7 +139,7 @@ class DriftSource(Source):
                 try:
                     value, units = await device.read(adapt=True, connect=False)
                 except Exception as err:
-                    log.error(f'{self.name}: failed reaing device {device.name}: {err}')
+                    log.error(f"{self.name}: failed reaing device {device.name}: {err}")
                     continue
 
                 if device.__type__ == "relay":
