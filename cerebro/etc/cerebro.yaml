@@ -175,6 +175,7 @@ sources:
       - lvmscp.status.mod2/heaterboutput
       - lvmscp.status.mod12/heateraoutput
       - lvmscp.status.mod12/heaterboutput
+      - lvmscp.status.status
     groupers:
       - controller
     commands:
