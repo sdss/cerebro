@@ -31,7 +31,7 @@ profiles:
   fps-osu:
     sources:
       - ieb:
-          type: ieb
+          type: drift
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
     observers:
