@@ -33,7 +33,7 @@ profiles:
       - ieb:
           type: ieb
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
     observers:
       - influxdb
 
@@ -92,7 +92,7 @@ sources:
   ieb:
     type: drift
     bucket: IEB
-    config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+    config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
   lvm_govee_clean_room:
     type: govee
     host: 10.7.45.30
