@@ -28,7 +28,7 @@ cerebro = "cerebro.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.7"
 numpy = "^1.17.4"
-sdsstools = ">=0.4.0"
+sdsstools = ">=0.5.1"
 influxdb-client = "^1.9.0"
 click = "^8.0.0"
 sdss-clu = "^1.5.5"
