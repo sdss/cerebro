@@ -33,7 +33,19 @@ profiles:
       - ieb:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_LCO.yaml
+      - tron:
+          type: tron
+          bucket: actors
+          host: sdss-hub
+          port: 6093
+          tags:
+            observatory: ${OBSERVATORY}
+          actors:
+            - fliswarm
+            - jaeger
+          commands:
+            'fliswarm talk status': 30
     observers:
       - influxdb
 
