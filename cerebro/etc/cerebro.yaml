@@ -31,7 +31,7 @@ profiles:
   fps-osu:
     sources:
       - ieb:
-          type: drift
+          type: ieb
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb_LCO.yaml
       - tron:
@@ -54,7 +54,7 @@ profiles:
       - ieb:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb.yaml
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
           delay: 30
       - chiller:
           type: drift
