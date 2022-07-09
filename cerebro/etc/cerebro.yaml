@@ -16,6 +16,7 @@ profiles:
       - lvm_actors
       # - lvm_sp1_ieb
       - lvm_sp2_ieb
+      - lvm_sp3_ieb
       - ln2_scale_sp1
       - lvm_spec_in_use
     observers:
@@ -202,6 +203,12 @@ sources:
     type: lvm_ieb
     bucket: sensors
     controller: sp2
+    delay: 30
+    config: ${LVMIEB_DIR}/python/lvmieb/etc/lvmieb.yml
+  lvm_sp3_ieb:
+    type: lvm_ieb
+    bucket: sensors
+    controller: sp3
     delay: 30
     config: ${LVMIEB_DIR}/python/lvmieb/etc/lvmieb.yml
   ln2_scale_sp1:
