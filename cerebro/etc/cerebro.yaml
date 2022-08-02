@@ -94,6 +94,31 @@ profiles:
     observers:
       - influxdb_apo
 
+  lco:
+    sources:
+      - ieb:
+          type: drift
+          bucket: FPS
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
+          delay: 30
+      - tron:
+          type: tron
+          bucket: actors
+          host: sdss5-hub.lco.cl
+          port: 6093
+          tags:
+            observatory: ${OBSERVATORY}
+          actors:
+            - apogeecal
+            - apogee
+            - alerts
+            - jaeger
+            - fliswarm
+          commands:
+            'fliswarm talk status': 60
+    observers:
+      - influxdb_lco
+
 sources:
   tron:
     type: tron
@@ -280,3 +305,9 @@ observers:
     token: ${INFLUXDB_CLOUD_TOKEN}
     org: c61507bd4e709b18
     default_bucket: sensors
+  influxdb_lco:
+    type: influxdb
+    url: http://sdss5-webapp.lco.cl:9999
+    token: null
+    org: lco
+    default_bucket: actors
