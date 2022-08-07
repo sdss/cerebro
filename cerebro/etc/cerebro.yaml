@@ -114,6 +114,7 @@ profiles:
             - alerts
             - jaeger
             - fliswarm
+            - yao
           commands:
             'fliswarm talk status': 60
     observers:
