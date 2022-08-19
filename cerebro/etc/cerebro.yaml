@@ -115,6 +115,12 @@ profiles:
             - jaeger
             - fliswarm
             - yao
+            - cherno
+            - hal
+            - lcotcc
+            - apogeebpr
+            - apogeefpi
+            - apogeeql
           commands:
             'fliswarm talk status': 60
     observers:
