@@ -89,6 +89,35 @@ profiles:
             - hal
             - cherno
             - jaeger
+            - hub
+            - cmds
+          commands:
+            'fliswarm talk status': 60
+      - tron_tags:
+          type: tron_tags
+          bucket: actors-tags
+          host: sdss5-hub.apo.nmsu.edu
+          port: 6093
+          tags:
+            observatory: ${OBSERVATORY}
+          actors:
+            - mcp
+            - apogeecal
+            - apogeebpr
+            - hartmann
+            - apo
+            - fliswarm
+            - apogeefpi
+            - tcc
+            - apogee
+            - boss
+            - alerts
+            - apogeeql
+            - hal
+            - cherno
+            - jaeger
+            - hub
+            - cmds
           commands:
             'fliswarm talk status': 60
     observers:
