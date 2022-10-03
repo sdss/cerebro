@@ -58,12 +58,12 @@ profiles:
       - ieb:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
+          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_APO.yaml
           delay: 30
       - chiller:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/chiller.yaml
+          config: ${JAEGER_DIR}/python/jaeger/etc/chiller_APO.yaml
           delay: 30
           measure_timeout: 30.0
       - tron:
