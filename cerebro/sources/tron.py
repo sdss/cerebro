@@ -194,7 +194,7 @@ class TronSource(Source):
         self.on_next(data_points)
 
 
-class TronSourceTags(Source):
+class TronTagsSource(Source):
     """A data source that monitors a Tron connection using tags.
 
     Same as `.TronSource` but in this case all the values in a keyword are
