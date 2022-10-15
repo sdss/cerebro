@@ -338,7 +338,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         Subject.__init__(self)
 
         self.name = name
-        self.run_id = str(uuid.uuid4())
 
         host = socket.getfqdn()
 
@@ -349,10 +348,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         start_time = datetime.datetime.utcnow().isoformat()
 
-        log.debug(
-            f"Starting Cerebro at {start_time} on host {host} "
-            f"with run_id={self.run_id!r}"
-        )
+        log.debug(f"Starting Cerebro at {start_time} on host {host}.")
 
         self.loop = asyncio.get_event_loop()
 
@@ -364,9 +360,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         # Add the name of the instance and the host to the default tags.
         self.tags = tags.copy()
-        self.tags.update(
-            {"cerebro": self.name, "cerebro_host": host, "run_id": self.run_id}
-        )
 
         self._offset = 0
         self.loop.call_soon(self.update_time_offset, ntp_server)
