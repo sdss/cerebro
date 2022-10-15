@@ -150,8 +150,25 @@ profiles:
             - apogeebpr
             - apogeefpi
             - apogeeql
+      - fliswarm:
+          type: actor_client
+          bucket: actors
+          actor: fliswarm
+          host: sdss5-hub
+          port: 19996
           commands:
-            'fliswarm talk status': 60
+            - talk status
+          interval: 60
+      - yao:
+          type: actor_client
+          bucket: actors
+          actor: yao
+          host: sdss5-boss-icc
+          port: 19999
+          commands:
+            - mech status
+          interval: 20
+
     observers:
       - influxdb_lco
 
