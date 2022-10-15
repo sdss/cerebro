@@ -167,6 +167,7 @@ profiles:
           port: 19999
           commands:
             - mech status
+            - status
           interval: 20
 
     observers:
