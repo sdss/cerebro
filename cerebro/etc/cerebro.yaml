@@ -137,6 +137,10 @@ profiles:
           port: 6093
           tags:
             observatory: ${OBSERVATORY}
+          keyword_tags:
+            fliswarm.status:
+              index: 0
+              name: camera
           actors:
             - apogeecal
             - apogee
@@ -156,9 +160,13 @@ profiles:
           actor: fliswarm
           host: sdss5-hub
           port: 19996
+          keyword_tags:
+            fliswarm.status:
+              index: 0
+              name: camera
           commands:
             - talk status
-          interval: 60
+          interval: 10
       - yao:
           type: actor_client
           bucket: actors
