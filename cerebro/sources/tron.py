@@ -17,13 +17,87 @@ from typing import Any, Dict, List, Optional
 import numpy
 
 from clu.legacy import TronConnection
-
-from cerebro.protocols import ClientProtocol
-from cerebro import log
-from .source import DataPoints, Source
-from clu.legacy.types.keys import Key, KeysDictionary
+from clu.legacy.types.keys import KeysDictionary
 from clu.legacy.types.messages import Keyword, Reply
-from clu.legacy.types.parser import ParseError, ActorReplyParser
+from clu.legacy.types.parser import ActorReplyParser, ParseError
+
+from cerebro import log
+from cerebro.protocols import ClientProtocol
+
+from .source import DataPoints, Source
+
+
+def process_keyword(
+    keyword: Keyword,
+    actor: str,
+    tags: dict = {},
+    keyword_tags: dict = {},
+    casts: dict = {},
+):
+    """Creates a series of data points out of a keyword."""
+
+    name = keyword.name
+    keyword_tag_value = None
+
+    points = []
+
+    ii = 0
+    for idx, key_value in enumerate(keyword.values):
+
+        if hasattr(key_value, "name") and key_value.name:
+            key_name = f"_{key_value.name}"
+        elif len(keyword.values) == 1:
+            key_name = ""
+        else:
+            key_name = f"_{ii}"
+
+        value_tags = tags.copy()
+        if hasattr(key_value, "units"):
+            value_tags.update({"units": key_value.units})
+
+        native = key_value.native
+        if isinstance(native, (list, tuple, numpy.ndarray)):
+            if key_value.__class__.__name__ == "PVT":
+                fields = {
+                    f"{name}{key_name}_P": native[0],
+                    f"{name}{key_name}_V": native[1],
+                    f"{name}{key_name}_T": native[2],
+                }
+            else:
+                warnings.warn(
+                    f"Cannot parse {actor}.{name!r} of type {type(native)!r}.",
+                    UserWarning,
+                )
+                continue
+
+        else:
+            parsed = native
+
+            if f"{actor}.{name}{key_name}" in casts:
+                cast = casts[f"{actor}.{name}{key_name}"]
+                if cast == "int":
+                    parsed = int(native)
+                elif cast == "float":
+                    parsed = float(native)
+                elif cast == "bool":
+                    parsed = bool(native)
+
+            fields = {f"{name}{key_name}": parsed}
+
+            if f"{actor}.{name}" in keyword_tags:
+                if idx == keyword_tags[f"{actor}.{name}"]["index"]:
+                    keyword_tag_value = parsed
+
+        points.append({"measurement": actor, "tags": value_tags, "fields": fields})
+
+        ii += 1
+
+    if keyword_tag_value is not None:
+        keyword_tag_name = keyword_tags[f"{actor}.{name}"]["name"]
+        for point in points:
+            point["tags"].update({keyword_tag_name: keyword_tag_value})
+
+    return points
 
 
 class TronSource(Source):
@@ -56,6 +130,19 @@ class TronSource(Source):
     keywords
         A list of keywords to monitor for a given actor. If `None`, all
         keywords are monitored and recorded.
+    commands
+        A dictionary of command string to be sent to the actor on an interval.
+        The value of each key-value pair is the interval, in seconds.
+    casts
+        A dictionary of ``actor.keyword.key_name`` to cast. E.g.,
+        ``{boss.exposure_time.exptime: "float"}``.
+    keyword_tags
+        A dictionary with a keyword value to be added to the data-points as a tag.
+        This is useful for keywords in which the values are not independent and
+        one wants to add an additional tag from the keyword itself. For example
+        in ``fliswarm.status`` contains several values that all relate to a
+        camera which is the first value in the keyword. To add the camera name
+        as a tag we can pass ``{"fliswarm.status": {"index": 0, "name": "camera}}``.
 
     """
 
@@ -73,6 +160,7 @@ class TronSource(Source):
         keywords: Optional[List[str]] = None,
         commands: dict[str, float] = {},
         casts: dict[str, str] = {},
+        keyword_tags: dict[str, dict] = {},
     ):
 
         super().__init__(name, bucket=bucket, tags=tags)
@@ -84,6 +172,7 @@ class TronSource(Source):
         self._command_tasks: list[asyncio.Task] = []
 
         self.casts = casts
+        self.keyword_tags = keyword_tags
 
         for model_name in self.tron.models:
             model = self.tron.models[model_name]
@@ -145,55 +234,13 @@ class TronSource(Source):
         if len(key.values) == 0:
             return
 
-        points = []
-
-        ii = 0
-        for key_value in key.values:
-
-            if hasattr(key_value, "name") and key_value.name:
-                key_name = f"_{key_value.name}"
-            elif len(key.values) == 1:
-                key_name = ""
-            else:
-                key_name = f"_{ii}"
-
-            tags = self.tags.copy()
-            if hasattr(key_value, "units"):
-                tags.update({"units": key_value.units})
-
-            native = key_value.native
-            if isinstance(native, (list, tuple, numpy.ndarray)):
-                if key_value.__class__.__name__ == "PVT":
-                    fields = {
-                        f"{name}{key_name}_P": native[0],
-                        f"{name}{key_name}_V": native[1],
-                        f"{name}{key_name}_T": native[2],
-                    }
-                else:
-                    warnings.warn(
-                        f"Cannot parse {actor}.{name!r} of type {type(native)!r}.",
-                        UserWarning,
-                    )
-                    continue
-
-            else:
-                parsed = native
-
-                if f"{actor}.{name}{key_name}" in self.casts:
-                    cast = self.casts[f"{actor}.{name}{key_name}"]
-                    if cast == "int":
-                        parsed = int(native)
-                    elif cast == "float":
-                        parsed = float(native)
-                    elif cast == "bool":
-                        parsed = bool(native)
-
-                fields = {f"{name}{key_name}": parsed}
-
-            points.append({"measurement": actor, "tags": self.tags, "fields": fields})
-
-            ii += 1
-
+        points = process_keyword(
+            key,
+            actor,
+            tags=self.tags,
+            casts=self.casts,
+            keyword_tags=self.keyword_tags,
+        )
         data_points = DataPoints(data=points, bucket=self.bucket)
 
         self.on_next(data_points)
@@ -397,6 +444,16 @@ class ActorClientSource(Source):
         The bucket to write to. If not set it will use the default bucket.
     tags
         A dictionary of tags to be associated with all measurements.
+    casts
+        A dictionary of ``actor.keyword.key_name`` to cast. E.g.,
+        ``{boss.exposure_time.exptime: "float"}``.
+    keyword_tags
+        A dictionary with a keyword value to be added to the data-points as a tag.
+        This is useful for keywords in which the values are not independent and
+        one wants to add an additional tag from the keyword itself. For example
+        in ``fliswarm.status`` contains several values that all relate to a
+        camera which is the first value in the keyword. To add the camera name
+        as a tag we can pass ``{"fliswarm.status": {"index": 0, "name": "camera}}``.
     store_broadcasts
         Whether to store broadcast messages that may not be in response to a command.
 
@@ -416,6 +473,7 @@ class ActorClientSource(Source):
         bucket: Optional[str] = None,
         tags: Dict[str, Any] = {},
         casts: dict[str, str] = {},
+        keyword_tags: dict[str, dict] = {},
         store_broadcasts: bool = False,
     ):
 
@@ -433,6 +491,7 @@ class ActorClientSource(Source):
         self.interval = interval
         self.casts = casts
         self.store_broadcasts = store_broadcasts
+        self.keyword_tags = keyword_tags
 
         self.buffer = b""
 
@@ -553,61 +612,14 @@ class ActorClientSource(Source):
         points = []
 
         for key in keys:
-            name = key.name
-            actor = self.actor
-
-            ii = 0
-            for key_value in key.values:
-
-                if hasattr(key_value, "name") and key_value.name:
-                    key_name = f"_{key_value.name}"
-                elif len(key.values) == 1:
-                    key_name = ""
-                else:
-                    key_name = f"_{ii}"
-
-                tags = self.tags.copy()
-                if hasattr(key_value, "units"):
-                    tags.update({"units": key_value.units})
-
-                native = key_value.native
-                if isinstance(native, (list, tuple, numpy.ndarray)):
-                    if key_value.__class__.__name__ == "PVT":
-                        fields = {
-                            f"{name}{key_name}_P": native[0],
-                            f"{name}{key_name}_V": native[1],
-                            f"{name}{key_name}_T": native[2],
-                        }
-                    else:
-                        warnings.warn(
-                            f"Cannot parse {actor}.{name!r} of type {type(native)!r}.",
-                            UserWarning,
-                        )
-                        continue
-
-                else:
-                    parsed = native
-
-                    if f"{actor}.{name}{key_name}" in self.casts:
-                        cast = self.casts[f"{actor}.{name}{key_name}"]
-                        if cast == "int":
-                            parsed = int(native)
-                        elif cast == "float":
-                            parsed = float(native)
-                        elif cast == "bool":
-                            parsed = bool(native)
-
-                    fields = {f"{name}{key_name}": parsed}
-
-                points.append(
-                    {
-                        "measurement": actor,
-                        "tags": self.tags,
-                        "fields": fields,
-                    }
-                )
-
-                ii += 1
+            key_points = process_keyword(
+                key,
+                self.actor,
+                tags=self.tags,
+                casts=self.casts,
+                keyword_tags=self.keyword_tags,
+            )
+            points += key_points
 
         data_points = DataPoints(data=points, bucket=self.bucket)
 
