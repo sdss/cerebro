@@ -16,7 +16,6 @@ import os
 import pathlib
 import socket
 import time
-import uuid
 import warnings
 
 from typing import Any, Dict, List, Optional
@@ -410,8 +409,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
                 # Time is in nanoseconds since UNIX epoch.
                 point["time"] = meas_time
             point["tags"].update(self.tags)
-            # Add a unique identifier for all the points being added together.
-            point["tags"].update({"group_id": uuid.uuid4().hex[:8]})
 
         # Propagate to all the observers.
         Subject.on_next(self, data)
