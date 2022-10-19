@@ -333,12 +333,10 @@ class ActorClientSource(Source):
             If `True`, gets all the keys in the models.
         """
 
-        loop = asyncio.get_running_loop()
-        self.transport, self.protocol = await loop.create_connection(  # type: ignore
-            lambda: ClientProtocol(self._handle_reply),
-            self.host,
-            self.port,
-        )
+        self.client = ClientProtocol(self._handle_reply, self.host, self.port)
+        self.client.connect()
+
+        await asyncio.sleep(3)
 
         for command in self.commands:
             self._command_tasks.append(
@@ -378,11 +376,20 @@ class ActorClientSource(Source):
 
         interval = interval or self.interval
 
-        assert self.transport
-
         while True:
-            self.transport.write(command.encode() + b"\n")
-            await asyncio.sleep(interval)
+            try:
+                if not self.client.transport or self.client.connected is False:
+                    log.error(
+                        f"{self.name}: actor has disconnected; "
+                        "will try to reconnect."
+                    )
+                    # The reconnecting protocol should take care of this.
+                elif self.client.transport:
+                    self.client.transport.write(command.encode() + b"\n")
+            except Exception as err:
+                log.error(f"{self.name}: {err}.")
+            finally:
+                await asyncio.sleep(interval)
 
     def _handle_reply(self, data: bytes):
         """Processes a keyword received from the actor.
