@@ -60,6 +60,7 @@ profiles:
           bucket: FPS
           config: ${JAEGER_DIR}/python/jaeger/etc/ieb_APO.yaml
           delay: 30
+          measure_timeout: 30.0
       - chiller:
           type: drift
           bucket: FPS
@@ -93,8 +94,12 @@ profiles:
             - cmds
           commands:
             'fliswarm talk status': 60
+      - tpm:
+          type: tpm
+          bucket: TPM
     observers:
       - influxdb_apo
+      - influxdb_apo_new
 
   lco:
     sources:
@@ -332,6 +337,12 @@ observers:
     type: influxdb
     url: http://sdss5-influx.apo.nmsu.edu:8086
     token: null
+    org: apo
+    default_bucket: FPS
+  influxdb_apo_new:
+    type: influxdb
+    url: http://sdss5-webapp.apo.nmsu.edu:9999
+    token: yF5vNFwaypbcfgbAJ9ATgcQu1tz37zoGZw5fkYJ8C-9YOTj5cl_MufXchuIdh8GmcHFKDuoJG4KTAdUElxqCvQ==
     org: apo
     default_bucket: FPS
   influxdb_cloud:
