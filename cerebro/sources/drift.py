@@ -122,6 +122,9 @@ class DriftSource(Source):
             except Exception as err:
                 if report_new_errors:
                     log.error(f"{self.name}: unknown exception: {err}")
+            finally:
+                if self.drift_instance.lock and self.drift_instance.lock.locked():
+                    self.drift_instance.lock.release()
 
             await asyncio.sleep(self.delay)
 
