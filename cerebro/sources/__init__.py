@@ -8,6 +8,7 @@
 
 from .AMQP import AMQPSource
 from .drift import DriftSource
+from .lco import LCOWeather
 from .lvm import GoveeSource
 from .source import Source, TCPSource, get_source_subclass
 from .tpm import TPMSource

@@ -151,6 +151,9 @@ profiles:
             - mech status
             - status
           interval: 20
+      - lco_weather:
+          type: lco_weather
+          bucket: lco
 
     observers:
       - influxdb_lco
