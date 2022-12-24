@@ -74,7 +74,10 @@ class LCOWeather(Source):
         self.last_data: datetime = datetime.utcnow()
 
         self._runner: asyncio.Task | None = None
-        self._tasks: list[Callable[[], Awaitable]] = [self.dimm_data]
+        self._tasks: list[Callable[[], Awaitable]] = [
+            self.dimm_data,
+            self.magellan_data,
+        ]
 
     async def start(self):
         """Starts the runner."""
@@ -143,7 +146,7 @@ class LCOWeather(Source):
             raise RuntimeError("Database connection is not open.")
 
         qdata = self.connection.execute_sql(
-            "SELECT tm, se FROM dimm_data ORDER BY tm desc LIMIT 10"
+            "SELECT tm, se FROM dimm_data ORDER BY tm DESC LIMIT 10"
         )
 
         valid = list(filter(lambda x: x[0] > self.last_data, qdata))
@@ -157,5 +160,39 @@ class LCOWeather(Source):
             }
             for vv in valid
         ]
+
+        return points
+
+    async def magellan_data(self):
+        """Gathers data from the Magellans."""
+
+        if self.connection.is_closed():
+            raise RuntimeError("Database connection is not open.")
+
+        qdata = self.connection.execute_sql(
+            "SELECT tm, un, fw FROM magellan_data WHERE fw IS NOT NULL AND fw > 0 "
+            "ORDER BY tm DESC LIMIT 10"
+        )
+
+        valid = list(filter(lambda x: x[0] > self.last_data, qdata))
+
+        points = []
+        tags = self.tags.copy()
+
+        for vv in valid:
+            if vv[1] == 0:
+                telescope = "baade"
+            else:
+                telescope = "clay"
+
+            points.append(
+                {
+                    "measurement": "magellan",
+                    "fields": {"seeing": vv[2]},
+                    "time": vv[0],
+                    "tags": {**tags, "telescope": telescope},
+                }
+                for vv in valid
+            )
 
         return points
