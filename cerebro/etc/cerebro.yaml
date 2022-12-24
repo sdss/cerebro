@@ -140,7 +140,7 @@ profiles:
               name: camera
           commands:
             - talk status
-          interval: 10
+          interval: 30
       - yao:
           type: actor_client
           bucket: actors
