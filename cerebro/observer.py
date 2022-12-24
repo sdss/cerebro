@@ -90,8 +90,8 @@ class InfluxDB(Observer):
     def __init__(
         self,
         name: str,
+        org: str,
         url: str = "http://localhost:9999",
-        org: Optional[str] = None,
         token: Optional[str] = None,
         default_bucket: Optional[str] = None,
     ):
