@@ -13,17 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Cerebro ${{ github.ref }}
-          body:
-          draft: false
-          prerelease: false
+          name: Cerebro ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
