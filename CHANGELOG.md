@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.0 - December 22, 2022
+
+(These are only the highlights. I haven't been very good at keeping a change log or versioning for Cerebro).
+
+### 🚀 New
+
+* Added support for LCO, including `LCOWeather` source that queries the LCO weather database.
+* Added `ActorClientSource` source that connects to an actor directly, without using Tron.
+* Added TPM load script to `bin/`.
+
+### 🏷️ Changed
+
+* Removed the `run_id` tag.
+
+### 🔧 Fixed
+
+* Prevent `DriftSource` hanging by using `sdss-drift>=0.4.5`.
+
+
 ## 0.2.0 - December 15, 2021
 
 ### 🚀 New
