@@ -16,7 +16,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Cerebro ${{ github.ref }}
+          name: Cerebro ${{ github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
