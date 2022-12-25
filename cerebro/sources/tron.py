@@ -43,7 +43,6 @@ def process_keyword(
 
     ii = 0
     for idx, key_value in enumerate(keyword.values):
-
         if hasattr(key_value, "name") and key_value.name:
             key_name = f"_{key_value.name}"
         elif len(keyword.values) == 1:
@@ -162,7 +161,6 @@ class TronSource(Source):
         casts: dict[str, str] = {},
         keyword_tags: dict[str, dict] = {},
     ):
-
         super().__init__(name, bucket=bucket, tags=tags)
 
         self.tron = TronConnection(f"cerebro.{name}", host, port, models=actors)
@@ -302,7 +300,6 @@ class ActorClientSource(Source):
         keyword_tags: dict[str, dict] = {},
         store_broadcasts: bool = False,
     ):
-
         super().__init__(name, bucket=bucket, tags=tags)
 
         self.transport: asyncio.Transport | None = None
@@ -417,7 +414,6 @@ class ActorClientSource(Source):
                 continue
 
             for reply_key in reply.keywords:
-
                 key_name = reply_key.name.lower()
                 if key_name not in self.keyword_dict:
                     log.warning(

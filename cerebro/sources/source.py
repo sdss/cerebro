@@ -85,7 +85,6 @@ class Source(Subject):
         bucket: Optional[str] = None,
         tags: Dict[str, Any] = {},
     ):
-
         if self.source_type is None:
             raise ValueError("Subclasses must override source_type.")
 
@@ -159,7 +158,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         delay: Optional[float] = None,
         **kwargs,
     ):
-
         super().__init__(name, **kwargs)
 
         self.host = host
@@ -207,7 +205,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         delay = delay or self.delay
 
         while True:
-
             # Connect to server
             try:
                 if self.writer and self.writer.is_closing():

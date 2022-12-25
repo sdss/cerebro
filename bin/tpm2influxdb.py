@@ -1,7 +1,7 @@
 import os
 
 import tpmdata
-from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 
@@ -17,7 +17,6 @@ client = InfluxDBClient(url="http://10.25.1.131:9999", token=token)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
 while 1:
-
     dd = tpmdata.packet(1, 0)
 
     keys = dd.keys()

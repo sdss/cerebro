@@ -40,7 +40,6 @@ class Observer(RXObserver, metaclass=abc.ABCMeta):
     observer_type = None
 
     def __init__(self, name: str):
-
         if self.observer_type is None:
             raise ValueError(
                 "observer_type is not defined for " f"class {self.__class__.__name__}."
@@ -95,7 +94,6 @@ class InfluxDB(Observer):
         token: Optional[str] = None,
         default_bucket: Optional[str] = None,
     ):
-
         super().__init__(name)
 
         self.default_bucket = default_bucket

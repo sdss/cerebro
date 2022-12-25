@@ -72,7 +72,6 @@ class AMQPSource(Source):
         groupers: list[str] = [],
         commands: dict[str, float] = {},
     ):
-
         super().__init__(name, bucket=bucket, tags=tags)
 
         key_actors = list(set([key.split(".")[0] for key in keywords]))

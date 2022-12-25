@@ -42,7 +42,6 @@ class GoveeSource(TCPSource):
         device: Optional[str] = None,
         **kwargs,
     ):
-
         super().__init__(*args, **kwargs)
 
         assert device or address, "One of device or address are needed."
@@ -53,7 +52,6 @@ class GoveeSource(TCPSource):
         self.bucket = self.bucket or "sensors"
 
     async def _read_internal(self) -> list[dict] | None:
-
         if not self.writer or not self.reader:
             return
 
@@ -122,7 +120,6 @@ class Sens4Source(TCPSource):
         delay: float = 1,
         **kwargs,
     ):
-
         super().__init__(*args, **kwargs)
 
         self.device_id = device_id
@@ -133,7 +130,6 @@ class Sens4Source(TCPSource):
         self.bucket = self.bucket or "sensors"
 
     async def _read_internal(self) -> list[dict] | None:
-
         if not self.writer or not self.reader:
             return
 
@@ -174,7 +170,6 @@ class LVMIEBSource(DriftSource):
     source_type = "lvm_ieb"
 
     def __init__(self, name: str, controller: str, config: str, **kwargs):
-
         config_dict = copy.deepcopy(read_yaml_file(config))
 
         config_data = {"modules": config_dict["wago_modules"]}
@@ -199,14 +194,12 @@ class LN2Scale(TCPSource):
         delay: float = 1,
         **kwargs,
     ):
-
         super().__init__(*args, **kwargs)
 
         self.delay = delay
         self.bucket = self.bucket or "sensors"
 
     async def _read_internal(self) -> list[dict] | None:
-
         if not self.writer or not self.reader:
             return
 
@@ -248,7 +241,6 @@ class CheckFileExistsSource(Source):
         tags: Dict[str, Any] = {},
         delay: Optional[float] = None,
     ):
-
         super().__init__(name, bucket=bucket, tags=tags)
 
         self.file = file

@@ -10,5 +10,4 @@ import cerebro
 
 
 def test_cerebro():
-
     assert isinstance(cerebro.Cerebro("cerebro"), cerebro.Cerebro)

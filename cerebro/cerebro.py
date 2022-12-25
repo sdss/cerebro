@@ -40,7 +40,6 @@ class SourceList(list):
     """
 
     def __init__(self, on_next, sources=[]):
-
         super().__init__()
 
         self.on_next = on_next
@@ -53,7 +52,6 @@ class SourceList(list):
             self.add_source(source)
 
     def stop(self):
-
         for source in self:
             if asyncio.iscoroutinefunction(source.stop):
                 close_task = asyncio.create_task(source.stop())
@@ -166,7 +164,6 @@ class Cerebellum(type):
         observers = []
 
         if profile_name:
-
             assert profile_name in profiles_data
 
             profile = profiles_data[profile_name]
@@ -207,7 +204,6 @@ class Cerebellum(type):
                     raise TypeError("Profile observers must be strings or dicts.")
 
         else:
-
             for source_name, params in config.pop("sources", {}).items():
                 if len(sources_kw) != 0 and source_name not in sources_kw:
                     continue
@@ -333,7 +329,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         logfile: Optional[str] = None,
         log_rotate: bool = True,
     ):
-
         Subject.__init__(self)
 
         self.name = name
@@ -434,7 +429,6 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         """Handles new connections to the status server."""
 
         while True:
-
             command = await reader.readline()
             command = command.decode().strip()
             if reader.at_eof():

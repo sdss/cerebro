@@ -40,7 +40,6 @@ class TPMSource(Source):
     source_type = "tpm"
 
     def __init__(self, name: str, **kwargs):
-
         if tpmdata is None:
             raise RuntimeError("tpmdata cannot be imported.")
 
@@ -79,7 +78,6 @@ class TPMSource(Source):
         assert tpmdata is not None
 
         while True:
-
             loop = asyncio.get_running_loop()
             dd = await loop.run_in_executor(None, tpmdata.packet, 0, 0)
 

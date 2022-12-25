@@ -61,7 +61,6 @@ class DriftSource(Source):
         measure_timeout: float = 5.0,
         **kwargs,
     ):
-
         super().__init__(name, **kwargs)
 
         if drift_instance and config:

@@ -39,7 +39,6 @@ class CerebroClient:
         token: str | None = None,
         org: str = "sdss5",
     ):
-
         if token is None:
             if "INFLUXDB_V2_TOKEN" in os.environ:
                 token = os.environ["INFLUXDB_V2_TOKEN"]
