@@ -52,7 +52,7 @@ jobs:
       - name: Lint with black
         run: |
           pip install black
-          black --check fliswarm/
+          black --check cerebro/
           black --check tests/
 
       - name: Test with pytest
