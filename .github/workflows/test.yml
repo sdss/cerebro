@@ -1,71 +1,68 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache Setup
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install --upgrade pip setuptools wheel
           pip install .
-
-      - name: Setup node.js (for pyright)
-        uses: actions/setup-node@v2
-        with:
-          node-version: '12'
 
       - name: Lint with flake8
         run: |
           pip install flake8
-          # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --show-source --statistics
-
-      - name: Lint with black
-        run: |
-          pip install --pre black
-          black --check .
 
       - name: Lint with isort
         run: |
           pip install isort
-          isort -c cerebro
+          isort -c fliswarm
 
-      - name: Run type checking
-        continue-on-error: true
+      - name: Lint with black
         run: |
-          npm install -g pyright
-          pyright
+          pip install black
+          black --check fliswarm/
+          black --check tests/
 
       - name: Test with pytest
         run: |
-          pip install pytest pytest-cov pytest-asyncio pytest-mock asynctest pytest-sugar
-          pip install coverage[toml]
+          pip install pytest pytest-mock pytest-asyncio pytest-cov
           pytest
+        env:
+          OBSERVATORY: APO
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml

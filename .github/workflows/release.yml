@@ -1,8 +1,7 @@
 on:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+' # Exclude pre-releases
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 name: Create Release
 
@@ -12,24 +11,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Cerebro ${{ github.ref }}
-          body: ""
+          body:
           draft: false
           prerelease: false
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -41,7 +40,7 @@ jobs:
           python -m pep517.build --source --binary --out-dir dist/ .
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
