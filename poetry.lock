@@ -1901,14 +1901,14 @@ sdsstools = ">=0.4.13"
 
 [[package]]
 name = "sdss-drift"
-version = "1.0.0"
+version = "1.0.1"
 description = "Modbus PLC control library"
 category = "main"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "sdss_drift-1.0.0-py3-none-any.whl", hash = "sha256:dac32dae7efac5b657e5daab1c5af9874324fa9bf5b7116e6db835c0652260bd"},
-    {file = "sdss_drift-1.0.0.tar.gz", hash = "sha256:d459354432797678cddd4f69bc4b1de11ed5925fae56d242015e4dfda9095490"},
+    {file = "sdss_drift-1.0.1-py3-none-any.whl", hash = "sha256:085119eabce60ae5a848d01c9b9180b29988f857c17f454a6ab04aed146fe95a"},
+    {file = "sdss_drift-1.0.1.tar.gz", hash = "sha256:90b093b80cb59041ff19875aa0f503efef5c068117d40d484dcb687ccb84e4e5"},
 ]
 
 [package.dependencies]
@@ -2373,4 +2373,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "1dedba9772a4f5eeacd30434157457e7409329cbeabe184b994484a7ec89fb1d"
+content-hash = "786b6750ff1626c9bb8cc1bff63892b62c7febdf49ae440ae1c7db64de8ba2ee"

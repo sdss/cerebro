@@ -1,6 +1,13 @@
 # Changelog
 
-## 1.0.0 - December 22, 2022
+## 1.0.1 - December 24, 2022
+
+### 🔧 Fixed
+
+* Require `sdss-drift>=1.0.1` to prevent an issue with reconnecting to a modbus source.
+
+
+## 1.0.0 - December 24, 2022
 
 (These are only the highlights. I haven't been very good at keeping a change log or versioning for Cerebro).
 
