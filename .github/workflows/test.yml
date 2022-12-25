@@ -47,7 +47,7 @@ jobs:
       - name: Lint with isort
         run: |
           pip install isort
-          isort -c fliswarm
+          isort -c cerebro
 
       - name: Lint with black
         run: |
