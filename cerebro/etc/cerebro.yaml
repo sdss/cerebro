@@ -93,18 +93,18 @@ profiles:
             - hub
             - cmds
       - fliswarm:
-        type: actor_client
-        bucket: actors
-        actor: fliswarm
-        host: sdss5-hub.apo.nmsu.edu
-        port: 19996
-        keyword_tags:
-          fliswarm.status:
-            index: 0
-            name: camera
-        commands:
-          - talk status
-        interval: 30
+          type: actor_client
+          bucket: actors
+          actor: fliswarm
+          host: sdss5-hub.apo.nmsu.edu
+          port: 19996
+          keyword_tags:
+            fliswarm.status:
+              index: 0
+              name: camera
+          commands:
+            - talk status
+          interval: 30
     observers:
       - influxdb_apo
 
