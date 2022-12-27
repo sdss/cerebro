@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import warnings
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlite3 import OperationalError
 
 from typing import Any, Awaitable, Callable, Optional
@@ -71,7 +71,7 @@ class LCOWeather(Source):
             read_default_file="~/.my.cnf",
         )
 
-        self.last_data: datetime = datetime.utcnow()
+        self.last_data: datetime = datetime.utcnow() - timedelta(minutes=10)
 
         self._runner: asyncio.Task | None = None
         self._tasks: list[Callable[[], Awaitable]] = [
@@ -192,7 +192,6 @@ class LCOWeather(Source):
                     "time": vv[0],
                     "tags": {**tags, "telescope": telescope},
                 }
-                for vv in valid
             )
 
         return points
