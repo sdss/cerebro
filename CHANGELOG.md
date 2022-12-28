@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 - December 28, 2022
+
+### ✨ Improved
+
+Moved the `tmp2influxdb.py` script inside `cerebro/` and added an entry point `tmp2influxdb` in the `pyproject.toml` file.
+
+
 ## 1.0.2 - December 28, 2022
 
 ### 🔧 Fixed
