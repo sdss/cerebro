@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - December 28, 2022
+
+### 🔧 Fixed
+
+* Fixed an issue with the YAML section for `fliwarm` at APO.
+
+
 ## 1.0.1 - December 24, 2022
 
 ### 🔧 Fixed
