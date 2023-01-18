@@ -145,11 +145,10 @@ class LCOWeather(Source):
         if self.connection.is_closed():
             raise RuntimeError("Database connection is not open.")
 
+        time_str = self.last_data.strftime("'%Y-%m-%d %H:%M:%S'")
         qdata = self.connection.execute_sql(
-            "SELECT tm, se, el FROM dimm_data ORDER BY tm DESC LIMIT 10"
+            f"SELECT tm, se, el FROM dimm_data WHERE tm > {time_str} ORDER BY tm DESC"
         )
-
-        valid = list(filter(lambda x: x[0] > self.last_data, qdata))
 
         points = [
             {
@@ -158,7 +157,7 @@ class LCOWeather(Source):
                 "time": vv[0],
                 "tags": self.tags.copy(),
             }
-            for vv in valid
+            for vv in qdata
         ]
 
         return points
@@ -169,17 +168,17 @@ class LCOWeather(Source):
         if self.connection.is_closed():
             raise RuntimeError("Database connection is not open.")
 
+        time_str = self.last_data.strftime("'%Y-%m-%d %H:%M:%S'")
         qdata = self.connection.execute_sql(
             "SELECT tm, un, fw, az, el FROM magellan_data "
-            "WHERE fw IS NOT NULL AND fw > 0 ORDER BY tm DESC LIMIT 10"
+            f"WHERE fw IS NOT NULL AND fw > 0 AND tm > {time_str}"
+            "ORDER BY tm DESC"
         )
-
-        valid = list(filter(lambda x: x[0] > self.last_data, qdata))
 
         points = []
         tags = self.tags.copy()
 
-        for vv in valid:
+        for vv in qdata:
             if vv[1] == 0:
                 telescope = "baade"
             else:
