@@ -62,6 +62,9 @@ def cerebro(ctx, sources, config, profiles):
 
     ctx.obj = {"sources": sources, "config": config, "profiles": profiles}
 
+    print("Using config file", config)
+    print("Profiles", profiles)
+
 
 @cerebro.group(
     cls=DaemonGroup,
@@ -141,7 +144,7 @@ async def restart(source):
 
 
 def main():
-    cerebro(obj={})
+    cerebro(obj={}, auto_envvar_prefix="CEREBRO")
 
 
 if __name__ == "__main__":
