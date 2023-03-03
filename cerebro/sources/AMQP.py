@@ -9,18 +9,67 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import MutableMapping
 from contextlib import suppress
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional
 
-from clu import AMQPClient
-
-from cerebro import log
+from clu import AMQPClient, AMQPReply
 
 from .source import DataPoints, Source
 
 
+if TYPE_CHECKING:
+    from aio_pika import IncomingMessage
+
 __all__ = ["AMQPSource"]
+
+
+def flatten_dict(
+    d: MutableMapping, parent_key: str = "", sep: str = ".", groupers: list[str] = []
+) -> tuple[MutableMapping, dict]:
+    """From https://bit.ly/3KN9v3G."""
+
+    groupings = {}
+
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, MutableMapping):
+            flattened, new_groupings = flatten_dict(v, new_key, sep=sep)
+            items.extend(flattened.items())
+            groupings.update(new_groupings)
+        else:
+            items.append((new_key, v))
+            if k in groupers:
+                groupings[k] = v
+
+    return dict(items), groupings
+
+
+class ReplyClient(AMQPClient):
+    """A client that monitors all the replies."""
+
+    def __init__(
+        self,
+        *args,
+        callback: Callable[[AMQPReply], Coroutine] | None = None,
+        **kwargs,
+    ):
+
+        super().__init__(*args, **kwargs)
+
+        self.callback = callback
+
+    async def handle_reply(self, message: IncomingMessage):
+        """Prints the formatted reply."""
+
+        reply = await super().handle_reply(message)
+
+        if self.callback:
+            asyncio.create_task(self.callback(reply))
+
+        return reply
 
 
 class AMQPSource(Source):
@@ -45,7 +94,7 @@ class AMQPSource(Source):
     keywords
         A list of keyword values to output. The format must be
         ``actor.keyword.subkeyword.subsubkeyword``. The final value extracted
-        must be a scalar.
+        must be a scalar. If `None`, all keywords will be stored.
     groupers
         A list of subkeywords that, if found, will be added as tags to the
         measurement. These are useful when the same keyword can be output
@@ -68,29 +117,23 @@ class AMQPSource(Source):
         port: int = 5672,
         user: str = "guest",
         password: str = "guest",
-        keywords: list[str] = [],
+        keywords: list[str] | None = None,
         groupers: list[str] = [],
         commands: dict[str, float] = {},
     ):
         super().__init__(name, bucket=bucket, tags=tags)
 
-        key_actors = list(set([key.split(".")[0] for key in keywords]))
-
-        self.client = AMQPClient(
+        self.client = ReplyClient(
             f"cerebro_client_{name}",
             user=user,
             password=password,
             host=host,
             port=port,
-            models=key_actors,
+            callback=self.process_keyword,
         )
 
         self.keywords = keywords
         self.groupers = groupers
-        self._actor_keys = {
-            actor: [key.split(".")[1] for key in keywords if key.startswith(actor)]
-            for actor in key_actors
-        }
 
         self.commands = commands
         self._command_tasks: list[asyncio.Task] = []
@@ -104,14 +147,8 @@ class AMQPSource(Source):
             model.register_callback(self.process_keyword)
 
         for command in self.commands:
-            self._command_tasks.append(
-                asyncio.create_task(
-                    self.schedule_command(
-                        command,
-                        self.commands[command],
-                    )
-                )
-            )
+            task = self.schedule_command(command, self.commands[command])
+            self._command_tasks.append(asyncio.create_task(task))
 
         self.running = True
 
@@ -138,46 +175,27 @@ class AMQPSource(Source):
             await (await self.client.send_command(actor, cmd_str))
             await asyncio.sleep(interval)
 
-    async def process_keyword(self, model, keyword):
-        """Processes a keyword received from Tron."""
+    async def process_keyword(self, reply: AMQPReply):
+        """Processes a keyword received from an actor."""
 
-        name = keyword.name
-        actor = keyword.model.name
+        actor = reply.sender
+        body = reply.body
 
-        if name not in self._actor_keys[actor]:
-            return
+        fields, grouppings = flatten_dict(body)
 
-        points = []
+        if self.keywords:
+            fields = {k: fields[k] for k in fields if k in self.keywords}
 
-        for key in self.keywords:
-            if not key.startswith(actor) or key.split(".")[1] != name:
-                continue
+        tags = self.tags.copy()
+        tags.update(grouppings)
 
-            value = keyword.value  # In case it's a scalar.
-            try:
-                subchunks = key.split(".")[2:]
-                field_name = ".".join(subchunks)
-                for chunk in subchunks:
-                    value = value.get(chunk, None)
-                    if value is None:
-                        return
-            except Exception as err:
-                log.warning(f"{self.name}: {err}")
-                return
-
-            tags = self.tags.copy()
-            if isinstance(keyword.value, dict):
-                for grouper in self.groupers:
-                    if grouper in keyword.value:
-                        tags[grouper] = keyword.value[grouper]
-
-            points.append(
-                {
-                    "measurement": actor,
-                    "tags": tags,
-                    "fields": {field_name: value},
-                }
-            )
+        points = [
+            {
+                "measurement": actor,
+                "tags": tags,
+                "fields": fields,
+            }
+        ]
 
         data_points = DataPoints(data=points, bucket=self.bucket)
 
