@@ -67,7 +67,6 @@ class ReplyClient(AMQPClient):
         callback: Callable[[AMQPReply], Coroutine] | None = None,
         **kwargs,
     ):
-
         super().__init__(*args, **kwargs)
 
         self.callback = callback
