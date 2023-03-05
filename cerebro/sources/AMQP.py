@@ -26,7 +26,10 @@ __all__ = ["AMQPSource"]
 
 
 def flatten_dict(
-    d: MutableMapping, parent_key: str = "", sep: str = ".", groupers: list[str] = []
+    d: MutableMapping,
+    parent_key: str = "",
+    sep: str = ".",
+    groupers: list[str] = [],
 ) -> tuple[MutableMapping, dict]:
     """From https://bit.ly/3KN9v3G."""
 
@@ -34,9 +37,17 @@ def flatten_dict(
 
     items = []
     for k, v in d.items():
+        if isinstance(v, (tuple, list)):
+            continue
+
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, MutableMapping):
-            flattened, new_groupings = flatten_dict(v, new_key, sep=sep)
+            flattened, new_groupings = flatten_dict(
+                v,
+                new_key,
+                groupers=groupers,
+                sep=sep,
+            )
             items.extend(flattened.items())
             groupings.update(new_groupings)
         else:
@@ -181,7 +192,7 @@ class AMQPSource(Source):
         actor = reply.sender
         body = reply.body
 
-        fields, grouppings = flatten_dict(body)
+        fields, grouppings = flatten_dict(body, groupers=self.groupers)
 
         if self.keywords:
             fields = {k: fields[k] for k in fields if k in self.keywords}
