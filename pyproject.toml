@@ -32,7 +32,7 @@ numpy = "^1.17.4"
 sdsstools = ">=0.5.1"
 influxdb-client = {version="^1.9.0", extras=["extra"]}
 click = "^8.0.0"
-sdss-clu = "^1.5.5"
+sdss-clu = "^2.0.0"
 ntplib = "^0.3.4"
 daemonocle = "^1.0.2"
 click-default-group = "^1.2.2"

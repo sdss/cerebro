@@ -109,6 +109,8 @@ class AMQPSource(Source):
         A list of subkeywords that, if found, will be added as tags to the
         measurement. These are useful when the same keyword can be output
         for different devices or controllers.
+    internal
+        Mark commands sent to the actor as internal.
     commands
         A mapping of commands to be issued to the interval, in seconds. For
         example ``{"archon status": 5}``.
@@ -129,6 +131,7 @@ class AMQPSource(Source):
         password: str = "guest",
         keywords: list[str] | None = None,
         groupers: list[str] = [],
+        internal: bool = False,
         commands: dict[str, float] = {},
     ):
         super().__init__(name, bucket=bucket, tags=tags)
@@ -144,6 +147,7 @@ class AMQPSource(Source):
 
         self.keywords = keywords
         self.groupers = groupers
+        self.internal = internal
 
         self.commands = commands
         self._command_tasks: list[asyncio.Task] = []
@@ -182,7 +186,7 @@ class AMQPSource(Source):
         cmd_str = " ".join(command.split(" ")[1:])
 
         while True:
-            await (await self.client.send_command(actor, cmd_str))
+            await self.client.send_command(actor, cmd_str, internal=self.internal)
             await asyncio.sleep(interval)
 
     async def process_keyword(self, reply: AMQPReply):
