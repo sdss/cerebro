@@ -1,10 +1,28 @@
 # Changelog
 
+## 1.1.0 - July 9, 2023
+
+### ✨ Improved
+
+* Store altitude and azimuth for LCO seeing measurements.
+* Allow to get config and profiles from environment variables.
+* Change AMQPSource to monitor all replies.
+* Allow to schedule AMQP commands as internal.
+
+### 🔧 Fixed
+
+* Fix groupers in `AMQPSource`.
+
+### ⚙️ Engineering
+
+* Add docker image workflow.
+
+
 ## 1.0.3 - December 28, 2022
 
 ### ✨ Improved
 
-Moved the `tmp2influxdb.py` script inside `cerebro/` and added an entry point `tmp2influxdb` in the `pyproject.toml` file.
+* Moved the `tmp2influxdb.py` script inside `cerebro/` and added an entry point `tmp2influxdb` in the `pyproject.toml` file.
 
 
 ## 1.0.2 - December 28, 2022
