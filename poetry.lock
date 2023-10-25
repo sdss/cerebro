@@ -70,6 +70,17 @@ six = ">=1.12.0"
 test = ["astroid", "pytest"]
 
 [[package]]
+name = "asyncudp"
+version = "0.11.0"
+description = "Asyncio high level UDP sockets."
+optional = false
+python-versions = "*"
+files = [
+    {file = "asyncudp-0.11.0-py3-none-any.whl", hash = "sha256:96d859d86471e3ed30cf9f05cb38e96920156e3a9fe70ee916096ba758ea316e"},
+    {file = "asyncudp-0.11.0.tar.gz", hash = "sha256:c8ab6459f4dc8ebc42f401d3bd72c2a6c6808d10e42231f39e0c433ac646abf9"},
+]
+
+[[package]]
 name = "attrs"
 version = "23.1.0"
 description = "Classes Without Boilerplate"
@@ -1518,8 +1529,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -2739,4 +2750,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<4.0"
-content-hash = "a952f6e0150754c6199b2ebf46a9e8ae26de3c419464b5faa5cc2899fb945b28"
+content-hash = "760afda71dba162eefda79d0a5f1fec4ae1e3555e69f77c8da2aa949fda158a7"

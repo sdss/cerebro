@@ -17,6 +17,8 @@ from datetime import datetime
 
 from typing import Any, Dict, Optional
 
+import asyncudp
+
 from drift import Drift
 from sdsstools import read_yaml_file
 
@@ -294,3 +296,81 @@ class CheckFileExistsSource(Source):
             )
 
             await asyncio.sleep(self.delay)
+
+
+class ThermistorsSource(Source):
+    """Reads the spectrograph thermistors.
+
+    Reads the ADAM 6251-B module and outputs the status of each thermistor.
+
+    Parameters
+    ----------
+    name
+        The name of the data source.
+    host
+        The ADAM module IP.
+    port
+        The UDP port that serves the ASCII service.
+    bucket
+        The bucket to write to. If not set it will use the default bucket.
+    tags
+        A dictionary of tags to be associated with all measurements.
+    interval
+        How often to read the thermistors.
+
+    """
+
+    source_type = "lvm_thermistors"
+    interval: float = 1
+
+    def __init__(
+        self,
+        name: str,
+        host: str,
+        port: int = 1025,
+        bucket: Optional[str] = None,
+        tags: dict[str, Any] = {},
+        interval: float | None = None,
+    ):
+        super().__init__(name, bucket, tags)
+
+        self.interval = interval or self.interval
+
+        self.host = host
+        self.port = port
+
+        self._runner: asyncio.Task | None = None
+
+    async def start(self):
+        """Starts the runner."""
+
+        self._runner = asyncio.create_task(self._run_tasks())
+
+        await super().start()
+
+    async def stop(self):
+        """Stops the runner."""
+
+        if self._runner and not self._runner.done():
+            with suppress(asyncio.CancelledError):
+                self._runner.cancel()
+                await self._runner
+
+        self.running = False
+
+    async def _run_tasks(self):
+        """Connects to the ASCII service and reads the thermistors."""
+
+        try:
+            socket = await asyncio.wait_for(
+                asyncudp.create_socket(remote_addr=(self.host, self.port)),
+                timeout=10,
+            )
+
+            socket.sendto("$016\r\n")
+            data, _ = await asyncio.wait_for(socket.recvfrom(), timeout=10)
+
+            print(data)
+
+        except asyncio.TimeoutError:
+            log.error(f"Timed out connect or reading thermistors at {self.host!r}.")
