@@ -28,7 +28,7 @@ from .drift import DriftSource
 from .source import DataPoints, Source, TCPSource
 
 
-__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource"]
+__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource", "ThermistorsSource"]
 
 
 class GoveeSource(TCPSource):
@@ -311,6 +311,9 @@ class ThermistorsSource(Source):
         The ADAM module IP.
     port
         The UDP port that serves the ASCII service.
+    mapping
+        A mapping of ``channelN`` to a channel name that will be stored as
+        as tag.
     bucket
         The bucket to write to. If not set it will use the default bucket.
     tags
@@ -328,6 +331,7 @@ class ThermistorsSource(Source):
         name: str,
         host: str,
         port: int = 1025,
+        mapping: dict[str, str] = {},
         bucket: Optional[str] = None,
         tags: dict[str, Any] = {},
         interval: float | None = None,
@@ -338,6 +342,7 @@ class ThermistorsSource(Source):
 
         self.host = host
         self.port = port
+        self.mapping = mapping
 
         self._runner: asyncio.Task | None = None
 
@@ -361,16 +366,50 @@ class ThermistorsSource(Source):
     async def _run_tasks(self):
         """Connects to the ASCII service and reads the thermistors."""
 
-        try:
-            socket = await asyncio.wait_for(
-                asyncudp.create_socket(remote_addr=(self.host, self.port)),
-                timeout=10,
-            )
+        while True:
+            try:
+                socket = await asyncio.wait_for(
+                    asyncudp.create_socket(remote_addr=(self.host, self.port)),
+                    timeout=10,
+                )
 
-            socket.sendto("$016\r\n")
-            data, _ = await asyncio.wait_for(socket.recvfrom(), timeout=10)
+                socket.sendto(b"$016\r\n")
+                data, _ = await asyncio.wait_for(socket.recvfrom(), timeout=10)
 
-            print(data)
+                match = re.match(rb"!01([0-9A-F]+)\r", data)
+                if match is None:
+                    raise ValueError(
+                        f"Invalid response from thermistor server at {self.host!r}."
+                    )
 
-        except asyncio.TimeoutError:
-            log.error(f"Timed out connect or reading thermistors at {self.host!r}.")
+                value = int(match.group(1), 16)
+
+                channels: dict[int, int] = {}
+                for channel in range(16):
+                    channels[channel] = int((value & 1 << channel) > 0)
+
+                for channel, value in channels.items():
+                    channel_name = self.mapping.get(f"channel{channel}", "")
+                    tags = self.tags.copy()
+                    tags["channel_name"] = channel_name
+
+                    self.on_next(
+                        DataPoints(
+                            data=[
+                                {
+                                    "measurement": "thermistors",
+                                    "fields": {f"channel{channel}": value},
+                                    "tags": tags,
+                                }
+                            ],
+                            bucket=self.bucket,
+                        )
+                    )
+
+            except asyncio.TimeoutError:
+                log.error(f"Timed out connect or reading thermistors at {self.host!r}.")
+
+            except Exception as err:
+                log.error(err)
+
+            await asyncio.sleep(self.interval)
