@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 Added
+
+* [#18](https://github.com/sdss/cerebro/pull/18) Read LVM spectrograph thermistors.
+
+
 ## 1.1.0 - July 9, 2023
 
 ### ✨ Improved
