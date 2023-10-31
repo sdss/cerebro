@@ -17,6 +17,8 @@ from datetime import datetime
 
 from typing import Any, Dict, Optional
 
+import asyncudp
+
 from drift import Drift
 from sdsstools import read_yaml_file
 
@@ -26,7 +28,7 @@ from .drift import DriftSource
 from .source import DataPoints, Source, TCPSource
 
 
-__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource"]
+__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource", "ThermistorsSource"]
 
 
 class GoveeSource(TCPSource):
@@ -294,3 +296,120 @@ class CheckFileExistsSource(Source):
             )
 
             await asyncio.sleep(self.delay)
+
+
+class ThermistorsSource(Source):
+    """Reads the spectrograph thermistors.
+
+    Reads the ADAM 6251-B module and outputs the status of each thermistor.
+
+    Parameters
+    ----------
+    name
+        The name of the data source.
+    host
+        The ADAM module IP.
+    port
+        The UDP port that serves the ASCII service.
+    mapping
+        A mapping of ``channelN`` to a channel name that will be stored as
+        as tag.
+    bucket
+        The bucket to write to. If not set it will use the default bucket.
+    tags
+        A dictionary of tags to be associated with all measurements.
+    interval
+        How often to read the thermistors.
+
+    """
+
+    source_type = "lvm_thermistors"
+    interval: float = 1
+
+    def __init__(
+        self,
+        name: str,
+        host: str,
+        port: int = 1025,
+        mapping: dict[str, str] = {},
+        bucket: Optional[str] = None,
+        tags: dict[str, Any] = {},
+        interval: float | None = None,
+    ):
+        super().__init__(name, bucket, tags)
+
+        self.interval = interval or self.interval
+
+        self.host = host
+        self.port = port
+        self.mapping = mapping
+
+        self._runner: asyncio.Task | None = None
+
+    async def start(self):
+        """Starts the runner."""
+
+        self._runner = asyncio.create_task(self._run_tasks())
+
+        await super().start()
+
+    async def stop(self):
+        """Stops the runner."""
+
+        if self._runner and not self._runner.done():
+            with suppress(asyncio.CancelledError):
+                self._runner.cancel()
+                await self._runner
+
+        self.running = False
+
+    async def _run_tasks(self):
+        """Connects to the ASCII service and reads the thermistors."""
+
+        while True:
+            try:
+                socket = await asyncio.wait_for(
+                    asyncudp.create_socket(remote_addr=(self.host, self.port)),
+                    timeout=10,
+                )
+
+                socket.sendto(b"$016\r\n")
+                data, _ = await asyncio.wait_for(socket.recvfrom(), timeout=10)
+
+                match = re.match(rb"!01([0-9A-F]+)\r", data)
+                if match is None:
+                    raise ValueError(
+                        f"Invalid response from thermistor server at {self.host!r}."
+                    )
+
+                value = int(match.group(1), 16)
+
+                channels: dict[int, int] = {}
+                for channel in range(16):
+                    channels[channel] = int((value & 1 << channel) > 0)
+
+                for channel, value in channels.items():
+                    channel_name = self.mapping.get(f"channel{channel}", "")
+                    tags = self.tags.copy()
+                    tags["channel_name"] = channel_name
+
+                    self.on_next(
+                        DataPoints(
+                            data=[
+                                {
+                                    "measurement": "thermistors",
+                                    "fields": {f"channel{channel}": value},
+                                    "tags": tags,
+                                }
+                            ],
+                            bucket=self.bucket,
+                        )
+                    )
+
+            except asyncio.TimeoutError:
+                log.error(f"Timed out connect or reading thermistors at {self.host!r}.")
+
+            except Exception as err:
+                log.error(err)
+
+            await asyncio.sleep(self.interval)
