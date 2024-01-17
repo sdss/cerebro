@@ -6,6 +6,8 @@ WORKDIR /root
 
 COPY . cerebro
 
+RUN apt install -y git
+
 RUN cd cerebro && pip install .
 
 # Entry point is just the naked command. It is expected that
