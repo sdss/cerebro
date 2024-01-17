@@ -244,8 +244,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                 log.warning(f"{self.name}: {str(err)}")
 
             finally:
-                self.writer.close()
-                await self.writer.wait_closed()
                 await asyncio.sleep(delay)
 
 
