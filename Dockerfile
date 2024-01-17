@@ -6,7 +6,7 @@ WORKDIR /root
 
 COPY . cerebro
 
-RUN apt upgrade && apt install -y git
+RUN apt-get update && apt-get install -y git
 
 RUN cd cerebro && pip install .
 
