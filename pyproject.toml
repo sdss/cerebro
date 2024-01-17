@@ -27,9 +27,10 @@ cerebro = "cerebro.__main__:main"
 tpm2influxdb = "cerebro.scripts.tpm2influxdb:main"
 
 [tool.poetry.dependencies]
-python = "^3.8,<4.0"
+python = "^3.10,<3.13"
 numpy = "^1.17.4"
 sdsstools = ">=0.5.1"
+lvmopstools = {git="https://github.com/sdss/lvmopstools.git", branch="main"}
 influxdb-client = {version="^1.9.0", extras=["extra"]}
 click = "^8.0.0"
 sdss-clu = "^2.0.0"

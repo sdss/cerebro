@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 import asyncudp
+from lvmopstools import Retrier
 
 from drift import Drift
 from sdsstools import read_yaml_file
@@ -131,6 +132,7 @@ class Sens4Source(TCPSource):
 
         self.bucket = self.bucket or "sensors"
 
+    @Retrier(max_attempts=3, delay=1)
     async def _read_internal(self) -> list[dict] | None:
         if not self.writer or not self.reader:
             return
