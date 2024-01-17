@@ -15,8 +15,8 @@ from contextlib import suppress
 from typing import Any, Dict, List, NamedTuple, Optional, Type
 
 import rx
-from rx.disposable import Disposable
-from rx.subject import Subject
+from rx.disposable.disposable import Disposable
+from rx.subject.subject import Subject
 
 from cerebro import log
 
