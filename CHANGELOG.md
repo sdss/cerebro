@@ -6,6 +6,10 @@
 
 * Replaced `TCPSource` internals with the use of `lvmopstools.AsyncSocketHandler` which includes retrying and better error handling.
 
+### 🔧 Fixed
+
+* Fix docs building.
+
 
 ## 1.2.0 - November 24, 2023
 
