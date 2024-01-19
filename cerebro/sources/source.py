@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from contextlib import suppress
 
 from typing import Any, Dict, List, NamedTuple, Optional, Type
 
 import rx
+from lvmopstools.socket import AsyncSocketHandler
 from rx.disposable.disposable import Disposable
 from rx.subject.subject import Subject
+
+from sdsstools.utils import cancel_task
 
 from cerebro import log
 
@@ -156,6 +158,8 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         host: str,
         port: int,
         delay: Optional[float] = None,
+        retry: bool = True,
+        retrier_params: dict = {},
         **kwargs,
     ):
         super().__init__(name, **kwargs)
@@ -168,6 +172,12 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         self.reader: asyncio.StreamReader | None = None
         self.writer: asyncio.StreamWriter | None = None
 
+        self.handler = AsyncSocketHandler(
+            self.host,
+            self.port,
+            retry=retry,
+            retrier_params=retrier_params,
+        )
         self._runner: asyncio.Task | None = None
 
     async def start(self):
@@ -185,16 +195,17 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         if not self.running:
             raise RuntimeError(f"{self.name}: source is not running.")
 
-        with suppress(asyncio.CancelledError):
-            if self._runner:
-                self._runner.cancel()
-                await self._runner
-            self._runner = None
+        await cancel_task(self._runner)
+        self._runner = None
 
         super().stop()
 
     @abc.abstractmethod
-    async def _read_internal(self) -> list[dict] | None:
+    async def _read_internal(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> list[dict] | None:
         """Queries the TCP server and returns a list of points."""
 
         pass
@@ -207,41 +218,12 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         while True:
             # Connect to server
             try:
-                if self.writer and self.writer.is_closing():
-                    self.writer.close()
-                    await self.writer.wait_closed()
-
-                self.reader, self.writer = await asyncio.open_connection(
-                    self.host,
-                    self.port,
-                )
-
-            except (
-                OSError,
-                ConnectionError,
-                ConnectionResetError,
-                ConnectionRefusedError,
-            ) as err:
-                log.warning(f"{self.name}: {err}. Reconnecting in {delay} seconds.")
-                await asyncio.sleep(delay)
-                continue
-
-            except BaseException as err:
-                log.warning(f"{self.name}: Stopping after unknown error {err}.")
-                await self.stop()
-                return
-
-            # Communicate with server
-            try:
-                points = await self._read_internal()
-                if not self.reader.at_eof() and points is not None:
+                points = await self.handler(self._read_internal)
+                if points is not None:
                     self.on_next(DataPoints(data=points, bucket=self.bucket))
 
-            except asyncio.TimeoutError:
-                log.warning(f"{self.name}: timed out waiting for the server to reply.")
-
             except Exception as err:
-                log.warning(f"{self.name}: {str(err)}")
+                log.warning(f"{self.name}: Error while reading device: {str(err)}")
 
             finally:
                 await asyncio.sleep(delay)

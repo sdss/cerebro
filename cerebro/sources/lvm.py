@@ -53,14 +53,17 @@ class GoveeSource(TCPSource):
 
         self.bucket = self.bucket or "sensors"
 
-    async def _read_internal(self) -> list[dict] | None:
-        if not self.writer or not self.reader:
-            return
+    async def _read_internal(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> list[dict] | None:
+        """Queries the TCP server and returns a list of points."""
 
-        self.writer.write((f"status {self.address}\n").encode())
-        await self.writer.drain()
+        writer.write((f"status {self.address}\n").encode())
+        await writer.drain()
 
-        data = await asyncio.wait_for(self.reader.readline(), timeout=5)
+        data = await asyncio.wait_for(reader.readline(), timeout=5)
 
         # Not found
         if data == b"?\n":
@@ -131,14 +134,17 @@ class Sens4Source(TCPSource):
 
         self.bucket = self.bucket or "sensors"
 
-    async def _read_internal(self) -> list[dict] | None:
-        if not self.writer or not self.reader:
-            return
+    async def _read_internal(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> list[dict] | None:
+        """Queries the TCP server and returns a list of points."""
 
-        self.writer.write((f"@{self.device_id:d}Q?\\").encode())
-        await self.writer.drain()
+        writer.write((f"@{self.device_id:d}Q?\\").encode())
+        await writer.drain()
 
-        data = await asyncio.wait_for(self.reader.readuntil(b"\\"), timeout=5)
+        data = await asyncio.wait_for(reader.readuntil(b"\\"), timeout=5)
         data = data.decode()
 
         m = re.match(
@@ -201,14 +207,17 @@ class LN2Scale(TCPSource):
         self.delay = delay
         self.bucket = self.bucket or "sensors"
 
-    async def _read_internal(self) -> list[dict] | None:
-        if not self.writer or not self.reader:
-            return
+    async def _read_internal(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> list[dict] | None:
+        """Queries the TCP server and returns a list of points."""
 
-        self.writer.write(("~*P*~\n").encode())
-        await self.writer.drain()
+        writer.write(("~*P*~\n").encode())
+        await writer.drain()
 
-        data = await asyncio.wait_for(self.reader.readline(), timeout=5)
+        data = await asyncio.wait_for(reader.readline(), timeout=5)
         data = data.decode()
 
         m = re.search(r"\s([\-0-9.]+)\slb", data)
