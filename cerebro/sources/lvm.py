@@ -146,6 +146,7 @@ class Sens4Source(TCPSource):
 
         data = await asyncio.wait_for(reader.readuntil(b"\\"), timeout=5)
         data = data.decode()
+        log.info(self, data)
 
         m = re.match(
             r"^@[0-9]{1,3}ACKQ?"
