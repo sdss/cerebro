@@ -146,14 +146,13 @@ class Sens4Source(TCPSource):
 
         data = await asyncio.wait_for(reader.readuntil(b"\\"), timeout=5)
         data = data.decode()
-        log.info(f"{self} {data}")
 
         m = re.match(
             r"^@[0-9]{1,3}ACKQ?"
             r"([0-9]+?.[0-9]+E[+-][0-9]+),"
             r"([0-9]+?.[0-9]+E[+-][0-9]+),"
             r"([0-9]+?.[0-9]+E[+-][0-9]+),"
-            r"([0-9]+\.[0-9]+),$",
+            r"([0-9]+\.[0-9]+),.+\\$",
             data,
         )
         if not m:
