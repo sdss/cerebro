@@ -37,7 +37,7 @@ profiles:
       - ieb:
           type: ieb
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_LCO.yaml
+          config: ${JAEGER_DIR}/src/jaeger/etc/ieb_LCO.yaml
       - tron:
           type: tron
           bucket: actors
@@ -58,13 +58,13 @@ profiles:
       - ieb:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_APO.yaml
+          config: ${JAEGER_DIR}/src/jaeger/etc/ieb_APO.yaml
           delay: 30
           measure_timeout: 30.0
       - chiller:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/chiller_APO.yaml
+          config: ${JAEGER_DIR}/src/jaeger/etc/chiller_APO.yaml
           delay: 30
           measure_timeout: 30.0
       - tron:
@@ -113,7 +113,7 @@ profiles:
       - ieb:
           type: drift
           bucket: FPS
-          config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
+          config: ${JAEGER_DIR}/src/jaeger/etc/ieb_${OBSERVATORY}.yaml
           delay: 30
       - tron:
           type: tron
@@ -183,7 +183,7 @@ sources:
   ieb:
     type: drift
     bucket: IEB
-    config: ${JAEGER_DIR}/python/jaeger/etc/ieb_${OBSERVATORY}.yaml
+    config: ${JAEGER_DIR}/src/jaeger/etc/ieb_${OBSERVATORY}.yaml
   lvm_govee_clean_room:
     type: govee
     host: 10.7.45.30
