@@ -32,7 +32,6 @@ warnings.filterwarnings(
 
 
 class LCOWeather(Source):
-
     """Connects to the LCO weather database and grabs some information.
 
     Connection parameters are hardcoded here because they are unlikely to change.
