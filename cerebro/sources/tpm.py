@@ -11,15 +11,11 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 
+from tpm_multicast_client import TPMClient
+
 from cerebro import log
 
 from .source import DataPoints, Source
-
-
-try:
-    import tpmdata  # type: ignore
-except ImportError:
-    tpmdata = None
 
 
 __all__ = ["TPMSource"]
@@ -40,18 +36,17 @@ class TPMSource(Source):
     source_type = "tpm"
 
     def __init__(self, name: str, **kwargs):
-        if tpmdata is None:
-            raise RuntimeError("tpmdata cannot be imported.")
-
-        tpmdata.tinit()
+        self.tpm_client = TPMClient()
 
         super().__init__(name, **kwargs)
 
         self._running: asyncio.Task | None = None
+        self._listen_task: asyncio.Task | None = None
 
     async def start(self):
         """Connects to the socket."""
 
+        self._listen_task = asyncio.create_task(self.tpm_client.listen())
         self._runner = asyncio.create_task(self.read())
 
         await super().start()
@@ -70,24 +65,26 @@ class TPMSource(Source):
                 await self._runner
             self._runner = None
 
+            if self._listen_task:
+                self._listen_task.cancel()
+                await self._listen_task
+            self._listen_task = None
+
         super().stop()
 
     async def read(self):
         """Reads a packet from the TPM."""
 
-        assert tpmdata is not None
-
         while True:
-            loop = asyncio.get_running_loop()
-            dd = await loop.run_in_executor(None, tpmdata.packet, 0, 0)
+            if self.tpm_client.data is not None:
+                data = self.tpm_client.data
+                if len(data) > 0:
+                    tags = self.tags.copy()
+                    data_points = DataPoints(
+                        data=[{"measurement": "tpm", "fields": data, "tags": tags}],
+                        bucket=self.bucket,
+                    )
 
-            if len(dd) > 0:
-                tags = self.tags.copy()
-                data_points = DataPoints(
-                    data=[{"measurement": "tpm", "fields": dd, "tags": tags}],
-                    bucket=self.bucket,
-                )
-
-                self.on_next(data_points)
+                    self.on_next(data_points)
 
             await asyncio.sleep(1)

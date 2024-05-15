@@ -67,6 +67,9 @@ profiles:
           config: ${JAEGER_DIR}/src/jaeger/etc/chiller_APO.yaml
           delay: 30
           measure_timeout: 30.0
+      - tpm_data:
+          type: tpm
+          bucket: TPM
       - tron:
           type: tron
           bucket: actors
