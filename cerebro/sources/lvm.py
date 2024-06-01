@@ -20,7 +20,8 @@ from typing import Any, Dict, Optional
 import asyncudp
 
 from drift import Drift
-from sdsstools import read_yaml_file
+from drift.convert import data_to_float32
+from sdsstools import cancel_task, read_yaml_file
 
 from cerebro import log
 
@@ -422,3 +423,168 @@ class ThermistorsSource(Source):
                 log.error(err)
 
             await asyncio.sleep(self.interval)
+
+
+class LVMIonPumpSource(Source):
+    """A data source for a ModIcon ion pump controlled by a LabJack I/O device.
+
+    Parameters
+    ----------
+    name
+        The name of the data source.
+    host
+        The LabJack IP.
+    port
+        The port to the Modbus server (usually 502).
+    addresses
+        A mapping of LabJack addresses to read and the measurement and field
+        where to store them. An example of a valid ``addresses`` entry is
+        ``{'z2_pressure': {'address': 0, 'n_registers': 2 'type': 'float32',
+        'cast': 'float', 'measurement': 'pressure', 'field': 'ion', 'ccd': 'z2'}}``
+        where ``cast`` can be ``int``, ``float``, or ``bool``, in which case the
+        value will be converted to 0 or 1. ``ccd`` will be set a tag. If the
+        measurement is ``pressure``, the appropriate conversion from voltage to
+        Torr will be applied.
+    controller
+        The CCD controller (spectrograph) to which this source is associated.
+    bucket
+        The bucket to write to. If not set it will use the default bucket.
+    tags
+        A dictionary of tags to be associated with all measurements.
+    interval
+        How often to read the thermistors.
+
+    Examples
+    --------
+    An example of a valid configuration for this source is ::
+
+        lvm_ion_pump_sp2:
+            type: lvm_ion_pump
+            bucket: spec
+            interval: 5
+            host: 10.8.38.155
+            port: 502
+            controller: sp2
+            addresses:
+            z2_pressure:
+                address: 0
+                n_registers: 2
+                type: float32
+                cast: float
+                measurement: pressure
+                field: ion
+                ccd: z2
+            z2_power:
+                address: 2020
+                n_registers: 1
+                type: uint16
+                cast: bool
+                measurement: power
+                field: ion
+                ccd: z2
+
+    """
+
+    source_type: str = "lvm_ion_pump"
+    interval: float = 5
+
+    def __init__(
+        self,
+        name: str,
+        host: str,
+        port: int,
+        addresses: dict,
+        controller: str | None = None,
+        bucket: str | None = None,
+        tags: dict = {},
+        interval: float | None = None,
+    ):
+        super().__init__(name, bucket, tags)
+
+        if controller is not None:
+            self.tags["controller"] = controller
+
+        self.drift = Drift(host, port)
+        self.addresses = addresses
+
+        self.interval = interval or self.interval
+
+        self._runner: asyncio.Task | None = None
+
+    async def start(self):
+        """Starts the runner."""
+
+        self._runner = asyncio.create_task(self._read_device())
+
+        await super().start()
+
+    async def stop(self):
+        """Stops the runner."""
+
+        await cancel_task(self._runner)
+        self._runner = None
+
+        self.running = False
+
+    async def _read_device(self):
+        """Reads the device and emits the data points."""
+
+        while True:
+            data: list = []
+            try:
+                async with self.drift:
+                    for config in self.addresses.values():
+                        try:
+                            value = await self.drift.client.read_holding_registers(
+                                config["address"],
+                                config["n_registers"],
+                            )
+
+                            if config["type"] == "float32":
+                                value = data_to_float32(tuple(value.registers))
+                            elif config["type"] == "uint16":
+                                value = value.registers[0]
+                            else:
+                                raise ValueError(f"Invalid type {config['type']}.")
+
+                            if "cast" in config:
+                                value = eval(f"{config['cast']}({value})")
+                            if isinstance(value, bool):
+                                value = int(value)
+
+                            if config["measurement"] == "pressure":
+                                value = self.convert_pressure(value)
+
+                            tags = self.tags.copy()
+                            tags["ccd"] = config["ccd"]
+
+                            data.append(
+                                {
+                                    "measurement": config["measurement"],
+                                    "fields": {config["field"]: value},
+                                    "tags": tags,
+                                }
+                            )
+                        except Exception as err:
+                            addr = config["address"]
+                            log.warning(f"{self.name}: error in address {addr}: {err}")
+
+            except Exception as err:
+                log.error(f"{self.name}: unexpected error: {err}")
+
+            self.on_next(DataPoints(data=data, bucket=self.bucket))
+
+            await asyncio.sleep(self.interval)
+
+    def convert_pressure(self, volts: float):
+        """Converts the voltage to pressure in Torr."""
+
+        # The calibration is a linear fit of the form y = mx + b
+        m = 2.04545
+        b = -6.86373
+
+        log10_pp0 = m * volts + b  # log10(PPa), pressure in Pascal
+
+        torr = 10**log10_pp0 * 0.00750062
+
+        return torr
