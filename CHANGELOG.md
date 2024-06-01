@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* Added source `LVMIonPumpSource`.
+
+
 ## 1.2.1 - January 19, 2024
 
 ### ✨ Improved
