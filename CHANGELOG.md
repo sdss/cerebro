@@ -6,6 +6,10 @@
 
 * Added source `LVMIonPumpSource`.
 
+### ⚙️ Engineering
+
+* Use `ruff` for formatting and update dependencies and workflows.
+
 
 ## 1.2.1 - January 19, 2024
 
