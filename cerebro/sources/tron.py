@@ -377,8 +377,7 @@ class ActorClientSource(Source):
             try:
                 if not self.client.transport or self.client.connected is False:
                     log.error(
-                        f"{self.name}: actor has disconnected; "
-                        "will try to reconnect."
+                        f"{self.name}: actor has disconnected; will try to reconnect."
                     )
                     # The reconnecting protocol should take care of this.
                 elif self.client.transport:

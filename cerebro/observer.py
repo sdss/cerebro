@@ -42,7 +42,7 @@ class Observer(RXObserver, metaclass=abc.ABCMeta):
     def __init__(self, name: str):
         if self.observer_type is None:
             raise ValueError(
-                "observer_type is not defined for " f"class {self.__class__.__name__}."
+                f"observer_type is not defined for class {self.__class__.__name__}."
             )
 
         super().__init__(on_next=self.on_next)
@@ -102,7 +102,7 @@ class InfluxDB(Observer):
             if "INFLUXDB_V2_TOKEN" in os.environ:
                 token = os.environ["INFLUXDB_V2_TOKEN"]
             else:
-                raise ValueError("Token not provided or " "found in INFLUXDB_V2_TOKEN")
+                raise ValueError("Token not provided or found in INFLUXDB_V2_TOKEN")
 
         # Establish connection to InfluxDB
         self.client = InfluxDBClient(url=url, token=token, org=org)
