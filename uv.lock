@@ -2046,7 +2046,7 @@ wheels = [
 
 [[package]]
 name = "sdss-cerebro"
-version = "1.3.1a0"
+version = "1.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "asyncudp" },
