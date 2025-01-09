@@ -6,6 +6,10 @@
 
 * Added source `LVMIonPumpSource`.
 
+### 🔧 Fixed
+
+* Fix problem reading holding registers in recent versions of `pymodbus`.
+
 ### ⚙️ Engineering
 
 * Use `uv` for project management.

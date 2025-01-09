@@ -537,11 +537,12 @@ class LVMIonPumpSource(Source):
                         try:
                             value = await self.drift.client.read_holding_registers(
                                 config["address"],
-                                config["n_registers"],
+                                count=config["n_registers"],
                             )
 
                             if config["type"] == "float32":
-                                value = data_to_float32(tuple(value.registers))
+                                registers: Any = tuple(value.registers)
+                                value = data_to_float32(registers)
                             elif config["type"] == "uint16":
                                 value = value.registers[0]
                             else:
