@@ -8,7 +8,9 @@
 
 ### ⚙️ Engineering
 
+* Use `uv` for project management.
 * Use `ruff` for formatting and update dependencies and workflows.
+* Update workflows and Dockerfile to use `uv`.
 
 
 ## 1.2.1 - January 19, 2024

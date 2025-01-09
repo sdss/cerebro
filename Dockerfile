@@ -1,16 +1,18 @@
-FROM python:3.11-slim-bullseye
+FROM ghcr.io/astral-sh/uv:0.5.12-python3.13-bookworm-slim
 
-MAINTAINER Jose Sanchez-Gallego, gallegoj@uw.edu
+LABEL org.opencontainers.image.authors="Jose Sanchez-Gallego, gallegoj@uw.edu"
+LABEL org.opencontainers.image.source=https://github.com/sdss/cerebro
 
-WORKDIR /root
+WORKDIR /opt
 
 COPY . cerebro
 
-# RUN apt-get update && apt-get install -y git
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
-RUN cd cerebro && pip install .
+ENV PATH="$PATH:/opt/cerebro/.venv/bin"
 
-# Entry point is just the naked command. It is expected that
-# the configuration file and profiles are defined using environment
-# variables.
-CMD [ "cerebro", "start", "--debug" ]
+# Sync the project
+RUN cd cerebro && uv sync --frozen --no-cache
+
+CMD ["/opt/cerebro/.venv/bin/cerebro", "start", "--debug"]

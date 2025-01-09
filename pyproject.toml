@@ -1,63 +1,55 @@
-[tool.poetry]
+[project]
 name = "sdss-cerebro"
 version = "1.2.2a0"
 description = "Telemetry management and time series for SDSS-V"
-authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
+authors = [ { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" } ]
 license = "BSD-3-Clause"
 readme = "README.md"
-homepage = "https://github.com/sdss/cerebro"
-repository = "https://github.com/sdss/cerebro"
-documentation = "https://sdss-cerebro.readthedocs.io/en/latest/"
-keywords = ["astronomy", "software"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Topic :: Documentation :: Sphinx",
-    "Topic :: Software Development :: Libraries :: Python Modules"
-]
-packages = [
-    { include = "cerebro" }
-]
-include = ["cerebro/etc/*"]
+requires-python = ">=3.10,<4"
 
-[tool.poetry.scripts]
+dependencies = [
+    "numpy>=1.17.4",
+    "sdsstools>=1.6.1",
+    "influxdb-client[extra]>=1.9.0",
+    "click>=8.0.0",
+    "sdss-clu>=2.0.0",
+    "ntplib>=0.3.4",
+    "daemonocle>=1.0.2",
+    "click-default-group>=1.2.2",
+    "sdss-drift>=1.2.0",
+    "rx>=3.2.0",
+    "pymysql>=1.0.2",
+    "peewee>=3.15.4",
+    "asyncudp>=0.11.0",
+    "lvmopstools>=0.1.0",
+    "sdss-tpm-multicast-client>=0.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sdss/cerebro"
+Repository = "https://github.com/sdss/cerebro"
+Documentation = "https://sdss-cerebro.readthedocs.io/en/latest/"
+
+[project.scripts]
 cerebro = "cerebro.__main__:main"
 tpm2influxdb = "cerebro.scripts.tpm2influxdb:main"
 
-[tool.poetry.dependencies]
-python = "^3.10,<3.13"
-numpy = "^1.17.4"
-sdsstools = "^1.6.1"
-influxdb-client = {version="^1.9.0", extras=["extra"]}
-click = "^8.0.0"
-sdss-clu = "^2.0.0"
-ntplib = "^0.3.4"
-daemonocle = "^1.0.2"
-click-default-group = "^1.2.2"
-sdss-drift = "^1.2.0"
-rx = "^3.2.0"
-pymysql = "^1.0.2"
-peewee = "^3.15.4"
-asyncudp = "^0.11.0"
-lvmopstools = ">=0.1.0"
-sdss-tpm-multicast-client = ">=0.3.0"
-
-[tool.poetry.dev-dependencies]
-ipython = ">=8.0.0"
-matplotlib = ">=3.1.1"
-doc8 = ">=0.8.0"
-pytest = ">=5.2.2"
-rstcheck = "^3.3.1"
-pytest-cov = ">=2.8.1"
-pytest-sugar = ">=0.9.2"
-Sphinx = ">=3.0.0"
-codecov = ">=2.0.15"
-coverage = {version = ">=5.0", extras = ["toml"]}
-ipdb = ">=0.12.3"
-myst-parser = ">=0.14.0"
-ruff = ">=0.1.0"
+[dependency-groups]
+dev = [
+    "ipython>=8.0.0",
+    "matplotlib>=3.1.1",
+    "doc8>=0.8.0",
+    "pytest>=5.2.2",
+    "rstcheck>=3.3.1",
+    "pytest-cov>=2.8.1",
+    "pytest-sugar>=0.9.2",
+    "Sphinx>=3.0.0",
+    "codecov>=2.0.15",
+    "coverage[toml]>=5.0",
+    "ipdb>=0.12.3",
+    "myst-parser>=0.14.0",
+    "ruff>=0.1.0",
+]
 
 [tool.ruff]
 line-length = 88
@@ -99,5 +91,11 @@ exclude_lines = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.1.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["cerebro"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["cerebro"]
