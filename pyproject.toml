@@ -1,6 +1,6 @@
 [project]
 name = "sdss-cerebro"
-version = "1.3.0"
+version = "1.3.1a0"
 description = "Telemetry management and time series for SDSS-V"
 authors = [ { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" } ]
 license = "BSD-3-Clause"
