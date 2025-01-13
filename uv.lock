@@ -936,7 +936,7 @@ wheels = [
 
 [[package]]
 name = "lvmopstools"
-version = "0.5.6"
+version = "0.5.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aio-pika" },
@@ -954,9 +954,9 @@ dependencies = [
     { name = "strenum" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/27/a5/adac19ec225a6ff758e1524c970c621e220fe3cae1d01da948498dbbb3e7/lvmopstools-0.5.6.tar.gz", hash = "sha256:6b8a19c665199e98878c326537967541d251578f19f56a3a71c8eef5ba87238b", size = 130717 }
+sdist = { url = "https://files.pythonhosted.org/packages/76/f6/67f42a851059c9e3eb5e324c6637b7a7554ea07388537251852ff1102e19/lvmopstools-0.5.7.tar.gz", hash = "sha256:5db9b3a7705cbd803b0620bf864f345b1dde8c83ea3799823fd49b74c924292f", size = 130882 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/7d/e165190d49e3b4610ab8f4bc7bd1fe84831b20e4c6bb74d8dec36d50f8ce/lvmopstools-0.5.6-py3-none-any.whl", hash = "sha256:ec2a1043e7816065e9909432d194bf0baa6231ac6930c1a6b254fb58baf6a029", size = 138902 },
+    { url = "https://files.pythonhosted.org/packages/c7/08/af578d92de27320aad5da41e0ecc8ab0ccca71172ea08425dbe71911b4d8/lvmopstools-0.5.7-py3-none-any.whl", hash = "sha256:fe38e958a3bda5c8171eac261eff66dff9525f3bdb6393c41fe0da63e3f1b169", size = 139128 },
 ]
 
 [[package]]
@@ -2046,7 +2046,7 @@ wheels = [
 
 [[package]]
 name = "sdss-cerebro"
-version = "1.3.1a0"
+version = "1.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "asyncudp" },
@@ -2090,7 +2090,7 @@ requires-dist = [
     { name = "click-default-group", specifier = ">=1.2.2" },
     { name = "daemonocle", specifier = ">=1.0.2" },
     { name = "influxdb-client", extras = ["extra"], specifier = ">=1.9.0" },
-    { name = "lvmopstools", specifier = ">=0.5.6" },
+    { name = "lvmopstools", specifier = ">=0.5.7" },
     { name = "ntplib", specifier = ">=0.3.4" },
     { name = "numpy", specifier = ">=1.17.4" },
     { name = "peewee", specifier = ">=3.15.4" },
