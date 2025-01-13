@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Use `lvmopstools` to read the ion pump status.
+
+
 ## 1.3.0 - January 9, 2025
 
 ### 🚀 New

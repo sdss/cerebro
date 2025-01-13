@@ -18,9 +18,9 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 import asyncudp
+from lvmopstools.devices import read_ion_pumps
 
 from drift import Drift
-from drift.convert import data_to_float32
 from sdsstools import cancel_task, read_yaml_file
 
 from cerebro import log
@@ -428,23 +428,14 @@ class ThermistorsSource(Source):
 class LVMIonPumpSource(Source):
     """A data source for a ModIcon ion pump controlled by a LabJack I/O device.
 
+    Uses ``lvmopstools`` to retrieve the values. For each camera
+
     Parameters
     ----------
     name
         The name of the data source.
-    host
-        The LabJack IP.
-    port
-        The port to the Modbus server (usually 502).
-    addresses
-        A mapping of LabJack addresses to read and the measurement and field
-        where to store them. An example of a valid ``addresses`` entry is
-        ``{'z2_pressure': {'address': 0, 'n_registers': 2 'type': 'float32',
-        'cast': 'float', 'measurement': 'pressure', 'field': 'ion', 'ccd': 'z2'}}``
-        where ``cast`` can be ``int``, ``float``, or ``bool``, in which case the
-        value will be converted to 0 or 1. ``ccd`` will be set a tag. If the
-        measurement is ``pressure``, the appropriate conversion from voltage to
-        Torr will be applied.
+    cameras
+        The list of cameras to read.
     controller
         The CCD controller (spectrograph) to which this source is associated.
     bucket
@@ -462,38 +453,18 @@ class LVMIonPumpSource(Source):
             type: lvm_ion_pump
             bucket: spec
             interval: 5
-            host: 10.8.38.155
-            port: 502
             controller: sp2
-            addresses:
-            z2_pressure:
-                address: 0
-                n_registers: 2
-                type: float32
-                cast: float
-                measurement: pressure
-                field: ion
-                ccd: z2
-            z2_power:
-                address: 2020
-                n_registers: 1
-                type: uint16
-                cast: bool
-                measurement: power
-                field: ion
-                ccd: z2
+            cameras: [z2, r2, b2]
 
     """
 
     source_type: str = "lvm_ion_pump"
-    interval: float = 5
+    interval: float = 15
 
     def __init__(
         self,
         name: str,
-        host: str,
-        port: int,
-        addresses: dict,
+        cameras: list[str],
         controller: str | None = None,
         bucket: str | None = None,
         tags: dict = {},
@@ -501,11 +472,10 @@ class LVMIonPumpSource(Source):
     ):
         super().__init__(name, bucket, tags)
 
+        self.cameras = cameras
+
         if controller is not None:
             self.tags["controller"] = controller
-
-        self.drift = Drift(host, port)
-        self.addresses = addresses
 
         self.interval = interval or self.interval
 
@@ -514,7 +484,7 @@ class LVMIonPumpSource(Source):
     async def start(self):
         """Starts the runner."""
 
-        self._runner = asyncio.create_task(self._read_device())
+        self._runner = asyncio.create_task(self._read_devices())
 
         await super().start()
 
@@ -526,52 +496,50 @@ class LVMIonPumpSource(Source):
 
         self.running = False
 
-    async def _read_device(self):
+    async def _read_devices(self):
         """Reads the device and emits the data points."""
 
         while True:
-            data: list = []
             try:
-                async with self.drift:
-                    for config in self.addresses.values():
-                        try:
-                            value = await self.drift.client.read_holding_registers(
-                                config["address"],
-                                count=config["n_registers"],
-                            )
+                data: list = []
+                ion_data = await read_ion_pumps(self.cameras)
 
-                            if config["type"] == "float32":
-                                registers: Any = tuple(value.registers)
-                                value = data_to_float32(registers)
-                            elif config["type"] == "uint16":
-                                value = value.registers[0]
-                            else:
-                                raise ValueError(f"Invalid type {config['type']}.")
+                try:
+                    for camera in self.cameras:
+                        ion_camera_data = ion_data.get(camera)
+                        if ion_camera_data is None:
+                            log.warning(f"{self.name}: no data for camera {camera}.")
+                            continue
 
-                            if "cast" in config:
-                                value = eval(f"{config['cast']}({value})")
-                            if isinstance(value, bool):
-                                value = int(value)
+                        tags = self.tags.copy()
+                        tags["ccd"] = camera
 
-                            if config["measurement"] == "pressure":
-                                value = self.convert_pressure(value)
+                        # Pressure
+                        data.append(
+                            {
+                                "measurement": "pressure",
+                                "fields": {"ion": ion_camera_data["pressure"]},
+                                "tags": tags,
+                            }
+                        )
 
-                            tags = self.tags.copy()
-                            tags["ccd"] = config["ccd"]
+                        # Ion pump on/off
+                        data.append(
+                            {
+                                "measurement": "relays",
+                                "fields": {"ion": ion_camera_data["on"]},
+                                "tags": tags,
+                            }
+                        )
 
-                            data.append(
-                                {
-                                    "measurement": config["measurement"],
-                                    "fields": {config["field"]: value},
-                                    "tags": tags,
-                                }
-                            )
-                        except Exception as err:
-                            addr = config["address"]
-                            log.warning(f"{self.name}: error in address {addr}: {err}")
+                except Exception as err:
+                    log.error(
+                        f"{self.name}: unexpected error processing ion pump data.",
+                        exc_info=err,
+                    )
 
             except Exception as err:
-                log.error(f"{self.name}: unexpected error: {err}")
+                log.error(f"{self.name}: unexpected error.", exc_info=err)
 
             self.on_next(DataPoints(data=data, bucket=self.bucket))
 
