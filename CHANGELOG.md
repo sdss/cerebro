@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Replace LCO weather source with `lco_dimm_data`.
+
+
 ## 1.3.1 - January 12, 2025
 
 ### ✨ Improved

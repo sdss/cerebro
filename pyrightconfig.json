@@ -1,4 +1,0 @@
-{
-  "exclude": ["docs/**", "create_setup.py"],
-  "typeCheckingMode": "basic"
-}

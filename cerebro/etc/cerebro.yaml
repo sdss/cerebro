@@ -165,8 +165,8 @@ profiles:
             - mech status
             - status
           interval: 20
-      - lco_weather:
-          type: lco_weather
+      - lco_dimm_data:
+          type: lco_dimm_data
           bucket: lco
 
     observers:
