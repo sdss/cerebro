@@ -16,12 +16,11 @@ from datetime import datetime
 from typing import Any, ClassVar, Optional
 
 import httpx
-from polars import date
 
 from sdsstools.utils import cancel_task
 
 from cerebro import log
-from cerebro.sources.source import Source
+from cerebro.sources.source import DataPoints, Source
 
 
 warnings.filterwarnings(
@@ -68,7 +67,7 @@ class DIMMSource(Source):
         self.route = route
 
         self._runner_task: asyncio.Task | None = None
-        self._last_data = datetime.now(date.timezone.utc)
+        self._last_data: datetime | None = None
 
     async def start(self):
         """Starts the runner."""
@@ -111,7 +110,7 @@ class DIMMSource(Source):
                 seeing = float(match_dict["seeing"])
 
                 # Avoid adding the same point again and again during the day.
-                if time <= self._last_data:
+                if self._last_data and time <= self._last_data:
                     await asyncio.sleep(self.interval)
                     continue
 
@@ -123,14 +122,17 @@ class DIMMSource(Source):
                 continue
 
             self.on_next(
-                [
-                    {
-                        "measurement": "dimm",
-                        "fields": {"seeing": seeing, "altitude": alt},
-                        "time": time,
-                        "tags": self.tags.copy(),
-                    }
-                ]
+                DataPoints(
+                    data=[
+                        {
+                            "measurement": "dimm",
+                            "fields": {"seeing": seeing, "altitude": alt},
+                            "time": time,
+                            "tags": self.tags.copy(),
+                        }
+                    ],
+                    bucket=self.bucket,
+                )
             )
 
             await asyncio.sleep(self.interval)

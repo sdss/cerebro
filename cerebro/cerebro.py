@@ -115,6 +115,8 @@ class SourceList(list):
         except BaseException as exception:
             log.error(f"Failed starting source {source.name}: {exception!s}")
             source.running = False
+        else:
+            log.debug(f"Started source {source.name}.")
 
     def remove_source(self, source_name):
         """Removes a source."""
