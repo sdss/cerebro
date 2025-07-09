@@ -9,29 +9,21 @@
 from __future__ import annotations
 
 import asyncio
-import re
-import warnings
 from datetime import datetime
 
 from typing import Any, ClassVar, Optional
 
-import httpx
-
 from sdsstools.utils import cancel_task
 
 from cerebro import log
-from cerebro.sources.source import DataPoints, Source
+from cerebro.sources.source import Source
+from cerebro.tools import get_lco_seeing_data
+
+from .source import DataPoints
 
 
-warnings.filterwarnings(
-    "ignore",
-    message="Unable to determine MySQL version",
-    category=UserWarning,
-)
-
-
-class DIMMSource(Source):
-    """Retrieve DIMM data from the LCO ``clima.lco.cl`` API.
+class LCOSeeingDataSource(Source):
+    """Retrieve seeing data from DIMM and the Magellan telescopes.
 
     Parameters
     ----------
@@ -48,10 +40,8 @@ class DIMMSource(Source):
 
     """
 
-    source_type: ClassVar[str] = "lco_dimm_data"
-    base_url: ClassVar[str] = "http://clima.lco.cl"
-
-    interval: float = 90
+    source_type: ClassVar[str] = "lco_seeing_data"
+    interval: float = 60
 
     def __init__(
         self,
@@ -75,7 +65,7 @@ class DIMMSource(Source):
         if self._runner_task:
             await self.stop()
 
-        self._runner_task = asyncio.create_task(self._get_dimm_data())
+        self._runner_task = asyncio.create_task(self._get_seeing_data())
 
         await super().start()
 
@@ -85,54 +75,45 @@ class DIMMSource(Source):
         self._runner_task = await cancel_task(self._runner_task)
         self.running = False
 
-    async def _get_dimm_data(self):
+    async def _get_seeing_data(self):
         """Gets DIMM data from the API."""
 
         while True:
-            try:
-                async with httpx.AsyncClient(base_url=self.base_url) as client:
-                    response = await client.get(self.route)
-                    response.raise_for_status()
-                    data = response.text
+            for source in ["dimm", "clay", "baade"]:
+                try:
+                    data = await get_lco_seeing_data(
+                        start_time=-120,
+                        end_time=None,
+                        source=source,  # type: ignore[arg-type]
+                        verbose=False,
+                    )
 
-                match = re.match(
-                    r"^time = (?P<time>.+)\naz = (?P<az>.+)\nel = (?P<el>.+)\n"
-                    r"seeing = (?P<seeing>.+)\ncounts = (?P<counts>.+)\n$",
-                    data,
-                )
+                    data = data.drop("source")
+                    if source == "dimm":
+                        data = data.rename({"elevation": "altitude"})
 
-                if not match:
-                    raise ValueError("Could not parse DIMM data API response.")
+                    measurement = "dimm" if source == "dimm" else "magellan"
+                    tags = self.tags.copy()
+                    if source != "dimm":
+                        tags["telescope"] = source
 
-                match_dict = match.groupdict()
-                time = datetime.fromisoformat(match_dict["time"] + "Z")
-                alt = float(match_dict["el"])
-                seeing = float(match_dict["seeing"])
+                    data_points: list[dict[str, Any]] = []
+                    for row in data.iter_rows(named=True):
+                        time = row.pop("ts")
+                        data_points.append(
+                            {
+                                "measurement": measurement,
+                                "fields": row,
+                                "time": time,
+                                "tags": tags,
+                            }
+                        )
 
-                # Avoid adding the same point again and again during the day.
-                if self._last_data and time <= self._last_data:
+                    self.on_next(DataPoints(data=data_points, bucket=self.bucket))
+
+                except Exception as ee:
+                    log.error(f"Failed to get {source} data.", exc_info=ee)
                     await asyncio.sleep(self.interval)
                     continue
-
-                self._last_data = time
-
-            except Exception as ee:
-                log.error(f"Failed to get DIMM data: {ee}")
-                await asyncio.sleep(self.interval)
-                continue
-
-            self.on_next(
-                DataPoints(
-                    data=[
-                        {
-                            "measurement": "dimm",
-                            "fields": {"seeing": seeing, "altitude": alt},
-                            "time": time,
-                            "tags": self.tags.copy(),
-                        }
-                    ],
-                    bucket=self.bucket,
-                )
-            )
 
             await asyncio.sleep(self.interval)
