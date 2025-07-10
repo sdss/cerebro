@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 
-from influxdb_client import InfluxDBClient
+from influxdb_client.client.influxdb_client import InfluxDBClient
 
 
 class CerebroClient:

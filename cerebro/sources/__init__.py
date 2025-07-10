@@ -8,7 +8,7 @@
 
 from .AMQP import AMQPSource
 from .drift import DriftSource
-from .lco import DIMMSource
+from .lco import LCOSeeingDataSource, LCOWeatherDataSource
 from .lvm import GoveeSource
 from .source import Source, TCPSource, get_source_subclass
 from .tpm import TPMSource

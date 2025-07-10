@@ -4,6 +4,7 @@
 
 ### ✨ Improved
 
+* [#21](https://github.com/sdss/cerebro/pull/21) Use LCO new environmental API to collect weather and seeing data.
 * Replace LCO weather source with `lco_dimm_data`.
 
 

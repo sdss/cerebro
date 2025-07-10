@@ -9,29 +9,21 @@
 from __future__ import annotations
 
 import asyncio
-import re
-import warnings
 from datetime import datetime
 
 from typing import Any, ClassVar, Optional
 
-import httpx
-
 from sdsstools.utils import cancel_task
 
 from cerebro import log
-from cerebro.sources.source import DataPoints, Source
+from cerebro.sources.source import Source
+from cerebro.tools import get_lco_seeing_data, get_lco_weather_data
+
+from .source import DataPoints
 
 
-warnings.filterwarnings(
-    "ignore",
-    message="Unable to determine MySQL version",
-    category=UserWarning,
-)
-
-
-class DIMMSource(Source):
-    """Retrieve DIMM data from the LCO ``clima.lco.cl`` API.
+class LCOSeeingDataSource(Source):
+    """Retrieve seeing data from DIMM and the Magellan telescopes.
 
     Parameters
     ----------
@@ -48,10 +40,8 @@ class DIMMSource(Source):
 
     """
 
-    source_type: ClassVar[str] = "lco_dimm_data"
-    base_url: ClassVar[str] = "http://clima.lco.cl"
-
-    interval: float = 90
+    source_type: ClassVar[str] = "lco_seeing_data"
+    interval: float = 60
 
     def __init__(
         self,
@@ -75,7 +65,7 @@ class DIMMSource(Source):
         if self._runner_task:
             await self.stop()
 
-        self._runner_task = asyncio.create_task(self._get_dimm_data())
+        self._runner_task = asyncio.create_task(self._get_seeing_data())
 
         await super().start()
 
@@ -85,54 +75,154 @@ class DIMMSource(Source):
         self._runner_task = await cancel_task(self._runner_task)
         self.running = False
 
-    async def _get_dimm_data(self):
+    async def _get_seeing_data(self):
         """Gets DIMM data from the API."""
 
+        start_time: dict[str, str | None] = {"dimm": None, "clay": None, "baade": None}
+
         while True:
-            try:
-                async with httpx.AsyncClient(base_url=self.base_url) as client:
-                    response = await client.get(self.route)
-                    response.raise_for_status()
-                    data = response.text
+            for source in ["dimm", "clay", "baade"]:
+                try:
+                    data = await get_lco_seeing_data(
+                        start_time=start_time[source] or -120,
+                        end_time=None,
+                        source=source,  # type: ignore[arg-type]
+                        verbose=False,
+                    )
 
-                match = re.match(
-                    r"^time = (?P<time>.+)\naz = (?P<az>.+)\nel = (?P<el>.+)\n"
-                    r"seeing = (?P<seeing>.+)\ncounts = (?P<counts>.+)\n$",
-                    data,
-                )
+                    data = data.sort("ts").drop("source")
+                    if source == "dimm":
+                        data = data.rename({"elevation": "altitude"})
 
-                if not match:
-                    raise ValueError("Could not parse DIMM data API response.")
+                    measurement = "dimm" if source == "dimm" else "magellan"
+                    tags = self.tags.copy()
+                    if source != "dimm":
+                        tags["telescope"] = source
 
-                match_dict = match.groupdict()
-                time = datetime.fromisoformat(match_dict["time"] + "Z")
-                alt = float(match_dict["el"])
-                seeing = float(match_dict["seeing"])
+                    data_points: list[dict[str, Any]] = []
+                    for row in data.iter_rows(named=True):
+                        time = row.pop("ts")
+                        data_points.append(
+                            {
+                                "measurement": measurement,
+                                "fields": row,
+                                "time": time,
+                                "tags": tags,
+                            }
+                        )
 
-                # Avoid adding the same point again and again during the day.
-                if self._last_data and time <= self._last_data:
+                    self.on_next(DataPoints(data=data_points, bucket=self.bucket))
+
+                    if data.height > 0:
+                        start_time[source] = (
+                            data[-1, "ts"]
+                            .replace(microsecond=0)
+                            .isoformat()
+                            .replace("+00:00", "")
+                        )
+
+                except Exception as ee:
+                    log.error(f"Failed to get {source} data.", exc_info=ee)
                     await asyncio.sleep(self.interval)
                     continue
 
-                self._last_data = time
+            await asyncio.sleep(self.interval)
+
+
+class LCOWeatherDataSource(Source):
+    """Retrieve weather data from du Pont station.
+
+    Parameters
+    ----------
+    name
+        The name of the data source.
+    bucket
+        The bucket to write to. If not set it will use the default bucket.
+    route
+        The route to the API endpoint.
+    tags
+        A dictionary of tags to be associated with all measurements.
+    interval
+        How often to query for new data.
+
+    """
+
+    source_type: ClassVar[str] = "lco_weather_data"
+    interval: float = 60
+
+    def __init__(
+        self,
+        name: str,
+        bucket: Optional[str] = None,
+        route: str = "dimm_state",
+        tags: dict[str, Any] = {},
+        interval: float | None = None,
+    ):
+        super().__init__(name, bucket, tags)
+
+        self.interval = interval or self.interval
+        self.route = route
+
+        self._runner_task: asyncio.Task | None = None
+        self._last_data: datetime | None = None
+
+    async def start(self):
+        """Starts the runner."""
+
+        if self._runner_task:
+            await self.stop()
+
+        self._runner_task = asyncio.create_task(self._get_weather_data())
+
+        await super().start()
+
+    async def stop(self):
+        """Stops the runner."""
+
+        self._runner_task = await cancel_task(self._runner_task)
+        self.running = False
+
+    async def _get_weather_data(self):
+        """Gets DIMM data from the API."""
+
+        start_time: str | None = None
+
+        while True:
+            try:
+                data = await get_lco_weather_data(
+                    start_time=start_time or -120,
+                    end_time=None,
+                    source="dupont",
+                    verbose=False,
+                )
+
+                data = data.drop("source")
+
+                data_points: list[dict[str, Any]] = []
+                for row in data.iter_rows(named=True):
+                    time = row.pop("ts")
+                    data_points.append(
+                        {
+                            "measurement": "weather",
+                            "fields": row,
+                            "time": time,
+                            "tags": {"telescope": "dupont"},
+                        }
+                    )
+
+                self.on_next(DataPoints(data=data_points, bucket=self.bucket))
+
+                if data.height > 0:
+                    start_time = (
+                        data[-1, "ts"]
+                        .replace(microsecond=0)
+                        .isoformat()
+                        .replace("+00:00", "")
+                    )
 
             except Exception as ee:
-                log.error(f"Failed to get DIMM data: {ee}")
+                log.error("Failed to get du Pont weather data.", exc_info=ee)
                 await asyncio.sleep(self.interval)
                 continue
-
-            self.on_next(
-                DataPoints(
-                    data=[
-                        {
-                            "measurement": "dimm",
-                            "fields": {"seeing": seeing, "altitude": alt},
-                            "time": time,
-                            "tags": self.tags.copy(),
-                        }
-                    ],
-                    bucket=self.bucket,
-                )
-            )
 
             await asyncio.sleep(self.interval)
