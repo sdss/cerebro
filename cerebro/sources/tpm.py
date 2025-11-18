@@ -76,15 +76,18 @@ class TPMSource(Source):
         """Reads a packet from the TPM."""
 
         while True:
-            if self.tpm_client.data is not None:
-                data = self.tpm_client.data
-                if len(data) > 0:
-                    tags = self.tags.copy()
-                    data_points = DataPoints(
-                        data=[{"measurement": "tpm", "fields": data, "tags": tags}],
-                        bucket=self.bucket,
-                    )
+            try:
+                if self.tpm_client.data is not None:
+                    data = self.tpm_client.data
+                    if len(data) > 0:
+                        tags = self.tags.copy()
+                        data_points = DataPoints(
+                            data=[{"measurement": "tpm", "fields": data, "tags": tags}],
+                            bucket=self.bucket,
+                        )
 
-                    self.on_next(data_points)
+                        self.on_next(data_points)
+            except Exception as e:
+                log.error(f"{self.name}: error reading TPM data: {e}")
 
             await asyncio.sleep(1)
