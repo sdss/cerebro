@@ -341,7 +341,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
                 logfile = os.path.join(logfile, f"{name}.log")
             log.start_file_logger(logfile, rotating=log_rotate)
 
-        start_time = datetime.datetime.utcnow().isoformat()
+        start_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         log.debug(f"Starting Cerebro at {start_time} on host {host}.")
 

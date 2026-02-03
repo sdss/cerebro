@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import datetime
 import os
 import re
 from contextlib import suppress
-from datetime import datetime
 
 from typing import Any, Dict, Optional
 
@@ -72,12 +72,13 @@ class GoveeSource(TCPSource):
 
         address, temp, hum, _, isot = data.decode().strip().split()
 
-        date = datetime.fromisoformat(isot)
+        date = datetime.datetime.fromisoformat(isot)
         temp = float(temp)
         hum = float(hum)
 
         # Check the timestamp. If the data point is too old, skip.
-        if (datetime.utcnow() - date).seconds > 2 * self.delay:
+        utc = datetime.timezone.utc
+        if (datetime.datetime.now(utc) - date).seconds > 2 * self.delay:
             return None
 
         tags = self.tags.copy()
