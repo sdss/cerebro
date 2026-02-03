@@ -58,7 +58,7 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
         self._delay = min(self._delay * self.factor, self.max_delay)
         if self.jitter:
             self._delay = random.normalvariate(self._delay, self._delay * self.jitter)
-        self._call_handle = asyncio.get_event_loop().call_later(
+        self._call_handle = asyncio.get_running_loop().call_later(
             self._delay, self.connect
         )
 
@@ -68,14 +68,14 @@ class ReconnectingTCPClientProtocol(asyncio.Protocol):
 
     async def _connect(self):
         try:
-            await asyncio.get_event_loop().create_connection(
+            await asyncio.get_running_loop().create_connection(
                 lambda: self,
                 *self._args,
                 **self._kwargs,
             )
             self.connected = True
         except Exception as exc:
-            asyncio.get_event_loop().call_soon(self.connection_failed, exc)
+            asyncio.get_running_loop().call_soon(self.connection_failed, exc)
         finally:
             self._connector = None
 
@@ -99,7 +99,7 @@ class ClientProtocol(ReconnectingTCPClientProtocol):
         self.transport: asyncio.Transport | None = None
 
     def data_received(self, data):
-        asyncio.get_event_loop().call_soon(self._on_received, data)
+        asyncio.get_running_loop().call_soon(self._on_received, data)
 
     def connection_made(self, transport: asyncio.Transport):
         self.transport = transport

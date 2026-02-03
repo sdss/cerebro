@@ -39,13 +39,12 @@ class SourceList(list):
 
     """
 
-    def __init__(self, on_next, sources=[]):
+    def __init__(self, loop: asyncio.AbstractEventLoop, on_next, sources=[]):
         super().__init__()
 
         self.on_next = on_next
 
-        self.loop = asyncio.get_event_loop()
-        self.scheduler = AsyncIOScheduler(self.loop)
+        self.scheduler = AsyncIOScheduler(loop)
 
         self._name_to_source = {}
         for source in sources:
@@ -131,7 +130,7 @@ class Cerebellum(type):
 
     def __call__(cls, *args, **kwargs):
         args, kwargs = cls.__parse_config__(*args, **kwargs)
-        obj = Cerebro.__new__(cls)  # type: ignore
+        obj = Cerebro.__new__(cls)
         obj.__init__(*args, **kwargs)
         return obj
 
@@ -346,9 +345,14 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         log.debug(f"Starting Cerebro at {start_time} on host {host}.")
 
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # "There is no current event loop in thread %r"
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
-        self.sources = SourceList(self.on_next, sources)
+        self.sources = SourceList(self.loop, self.on_next, sources)
 
         for observer in observers:
             observer.set_cerebro(self)

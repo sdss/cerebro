@@ -50,7 +50,7 @@ class Observer(RXObserver, metaclass=abc.ABCMeta):
         self.cerebro = None
         self.name = name
 
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_running_loop()
         self.scheduler = AsyncIOScheduler(self.loop)
 
     def set_cerebro(self, cerebro):

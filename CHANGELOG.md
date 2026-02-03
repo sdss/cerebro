@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Wrap reading TPM data in a try/except.
+* Support Python 3.14.
 
 ### ⚙️ Engineering
 
