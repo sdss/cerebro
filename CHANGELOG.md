@@ -6,6 +6,11 @@
 
 * Wrap reading TPM data in a try/except.
 
+### ⚙️ Engineering
+
+* Use latest `ghcr.io/astral-sh/uv:python3.13-bookworm-slim` image.
+* Update GitHub workflows to use latest actions.
+
 
 ## 1.3.2 - July 10, 2025
 
