@@ -10,6 +10,7 @@
 
 * Use latest `ghcr.io/astral-sh/uv:python3.13-bookworm-slim` image.
 * Update GitHub workflows to use latest actions.
+* Use furo theme and update Sphinx and RTD config.
 
 
 ## 1.3.2 - July 10, 2025

@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
-
-from pkg_resources import parse_version
 
 from cerebro import __version__
 
@@ -11,21 +6,30 @@ from cerebro import __version__
 # Are we building in RTD?
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 
+
 # matplotlib.use('agg')
+
 
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
+    "sphinx_click.ext",
+    "sphinx-jsonschema",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
+
+pygments_style = "lovelace"
+pygments_dark_style = "one-dark"
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -41,15 +45,13 @@ master_doc = "index"
 
 # General information about the project.
 project = "cerebro"
-copyright = "{0}, {1}".format("2020", "José Sánchez-Gallego")
+copyright = "{0}, {1}".format("2020-", "José Sánchez-Gallego")
 author = "José Sánchez-Gallego"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-# The short X.Y version.
-version = parse_version(__version__).base_version
 # The full version, including alpha/beta/rc tags.
 release = __version__
 
@@ -58,16 +60,20 @@ release = __version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-default_role = "py:obj"
+default_role = "obj"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
@@ -94,21 +100,26 @@ todo_include_todos = False
 
 # Intersphinx mappings
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.9", None),
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
-    "drift": ("http://sdss-drift.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3.11", None),
 }
 
 autodoc_mock_imports = ["_tkinter"]
 autodoc_member_order = "groupwise"
-# autodoc_default_options = {"members": None, "show-inheritance": None}
-autodoc_typehints = "description"
+autodoc_default_options = {"members": None, "show-inheritance": None}
+# autodoc_typehints = "description"
 
-napoleon_use_rtype = False
-napoleon_use_ivar = True
+simplify_optional_unions = True
+typehints_use_signature_return = True
+
+# napoleon_use_rtype = False
+# napoleon_use_ivar = True
+
+copybutton_prompt_text = r">>> |\$ "
+copybutton_prompt_is_regexp = True
 
 rst_epilog = f"""
 .. |cerebro_version| replace:: {__version__}
+.. default-role:: py:obj
 """
 
 
@@ -116,22 +127,15 @@ rst_epilog = f"""
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "alabaster"
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    "logo": "sdssv_logo.png",
-    "github_user": "sdss",
-    "github_repo": "cerebro",
-    "github_button": True,
-    "github_type": "star",
-    "sidebar_collapse": True,
-    "page_width": "80%",
-}
-
+html_theme = "furo"
+html_title = "Cerebro's documentation"
+html_logo = "_static/sdssv_logo.png"
 html_favicon = "./_static/favicon.ico"
+html_theme_options = {
+    "source_repository": "https://github.com/sdss/cerebro/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -142,13 +146,3 @@ if on_rtd:
     html_static_path = []
 else:
     html_static_path = ["_static"]
-
-# Sidebar templates
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-    ]
-}
