@@ -7,6 +7,7 @@
 * Wrap reading TPM data in a try/except.
 * Support Python 3.14.
 * Fix deprecation of `datetime.utcnow()`.
+* Unpin `numpy` version.
 
 ### ⚙️ Engineering
 

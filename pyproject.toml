@@ -8,7 +8,7 @@ readme = "README.md"
 requires-python = ">=3.10,<4"
 
 dependencies = [
-    "numpy>=2.0.0,<2.3.0",
+    "numpy>=2.0.0",
     "sdsstools>=1.9.1",
     "influxdb-client[extra]>=1.9.0",
     "click>=8.0.0",
