@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 1.3.3 - February 2, 2026
 
 ### ✨ Improved
 
