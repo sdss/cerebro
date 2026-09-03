@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2022-12-21
 # @Filename: lco.py
@@ -11,7 +8,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from sdsstools.utils import cancel_task
 
@@ -46,7 +43,7 @@ class LCOSeeingDataSource(Source):
     def __init__(
         self,
         name: str,
-        bucket: Optional[str] = None,
+        bucket: str | None = None,
         route: str = "dimm_state",
         tags: dict[str, Any] = {},
         interval: float | None = None,
@@ -153,7 +150,7 @@ class LCOWeatherDataSource(Source):
     def __init__(
         self,
         name: str,
-        bucket: Optional[str] = None,
+        bucket: str | None = None,
         route: str = "dimm_state",
         tags: dict[str, Any] = {},
         interval: float | None = None,

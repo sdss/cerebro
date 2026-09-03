@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-05
 # @Filename: __init__.py

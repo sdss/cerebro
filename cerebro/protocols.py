@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2022-10-15
 # @Filename: protocols.py
@@ -12,7 +9,7 @@ import asyncio
 import random
 
 
-__all__ = ["ReconnectingTCPClientProtocol", "ClientProtocol"]
+__all__ = ["ClientProtocol", "ReconnectingTCPClientProtocol"]
 
 
 class ReconnectingTCPClientProtocol(asyncio.Protocol):

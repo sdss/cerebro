@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-05
 # @Filename: tron.py
@@ -12,7 +9,7 @@ import asyncio
 import warnings
 from contextlib import suppress
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy
 
@@ -151,12 +148,12 @@ class TronSource(Source):
     def __init__(
         self,
         name: str,
-        bucket: Optional[str] = None,
-        tags: Dict[str, Any] = {},
-        actors: List[str] = [],
+        bucket: str | None = None,
+        tags: dict[str, Any] = {},
+        actors: list[str] = [],
         host: str = "localhost",
         port: int = 6093,
-        keywords: Optional[List[str]] = None,
+        keywords: list[str] | None = None,
         commands: dict[str, float] = {},
         casts: dict[str, str] = {},
         keyword_tags: dict[str, dict] = {},
@@ -294,8 +291,8 @@ class ActorClientSource(Source):
         port: int,
         commands: list[str],
         interval: float = 60.0,
-        bucket: Optional[str] = None,
-        tags: Dict[str, Any] = {},
+        bucket: str | None = None,
+        tags: dict[str, Any] = {},
         casts: dict[str, str] = {},
         keyword_tags: dict[str, dict] = {},
         store_broadcasts: bool = False,

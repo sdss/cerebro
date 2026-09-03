@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-03
 # @Filename: cerebro.py
@@ -18,7 +15,7 @@ import socket
 import time
 import warnings
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import ntplib
 from rx.scheduler.eventloop.asyncioscheduler import AsyncIOScheduler
@@ -108,7 +105,7 @@ class SourceList(list):
 
         try:
             await asyncio.wait_for(source.start(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.error(f"Timed out trying to start source {source.name}.")
             source.running = False
         except BaseException as exception:
@@ -321,13 +318,13 @@ class Cerebro(Subject, metaclass=MetaCerebro):
     def __init__(
         self,
         name: str = "cerebro",
-        tags: Dict[str, Any] = {},
-        sources: List[Source | str] = [],
-        observers: List[Observer] = [],
-        config: Optional[str | dict | pathlib.Path] = None,
-        profile: Optional[str] = None,
+        tags: dict[str, Any] = {},
+        sources: list[Source | str] = [],
+        observers: list[Observer] = [],
+        config: str | dict | pathlib.Path | None = None,
+        profile: str | None = None,
         ntp_server: str = "us.pool.ntp.org",
-        logfile: Optional[str] = None,
+        logfile: str | None = None,
         log_rotate: bool = True,
     ):
         Subject.__init__(self)
@@ -341,7 +338,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
                 logfile = os.path.join(logfile, f"{name}.log")
             log.start_file_logger(logfile, rotating=log_rotate)
 
-        start_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        start_time = datetime.datetime.now(datetime.UTC).isoformat()
 
         log.debug(f"Starting Cerebro at {start_time} on host {host}.")
 
@@ -438,7 +435,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
             command = await reader.readline()
             command = command.decode().strip()
             if reader.at_eof():
-                return None
+                return
 
             if command == "status":
                 status = {source.name: source.running for source in self.sources}

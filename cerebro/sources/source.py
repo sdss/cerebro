@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-03
 # @Filename: source.py
@@ -11,7 +8,7 @@ from __future__ import annotations
 import abc
 import asyncio
 
-from typing import Any, Dict, List, NamedTuple, Optional, Type
+from typing import Any, NamedTuple
 
 import rx
 from lvmopstools.socket import AsyncSocketHandler
@@ -25,16 +22,16 @@ from cerebro import log
 
 __all__ = [
     "DataPoints",
-    "wrap_async_observable",
     "Source",
-    "get_source_subclass",
     "TCPSource",
+    "get_source_subclass",
+    "wrap_async_observable",
 ]
 
 
 class DataPoints(NamedTuple):
     bucket: str | None
-    data: List[Dict[str, Any]]
+    data: list[dict[str, Any]]
 
 
 def wrap_async_observable(observable, *args, **kwargs):
@@ -84,8 +81,8 @@ class Source(Subject):
     def __init__(
         self,
         name: str,
-        bucket: Optional[str] = None,
-        tags: Dict[str, Any] = {},
+        bucket: str | None = None,
+        tags: dict[str, Any] = {},
     ):
         if self.source_type is None:
             raise ValueError("Subclasses must override source_type.")
@@ -157,7 +154,7 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
         name: str,
         host: str,
         port: int,
-        delay: Optional[float] = None,
+        delay: float | None = None,
         retry: bool = True,
         retrier_params: dict = {},
         **kwargs,
@@ -208,8 +205,6 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
     ) -> list[dict] | None:
         """Queries the TCP server and returns a list of points."""
 
-        pass
-
     async def read(self, delay=None):
         """Queries the TCP server, emits data points, and handles disconnections."""
 
@@ -223,13 +218,13 @@ class TCPSource(Source, metaclass=abc.ABCMeta):
                     self.on_next(DataPoints(data=points, bucket=self.bucket))
 
             except Exception as err:
-                log.warning(f"{self.name}: Error while reading device: {str(err)}")
+                log.warning(f"{self.name}: Error while reading device: {err!s}")
 
             finally:
                 await asyncio.sleep(delay)
 
 
-def get_source_subclass(type_: str) -> Type[Source] | None:
+def get_source_subclass(type_: str) -> type[Source] | None:
     """Returns a `.Source` subclass based on its ``data_type``."""
 
     def all_subclasses(cls):

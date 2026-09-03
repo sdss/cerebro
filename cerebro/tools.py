@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2025-07-08
 # @Filename: tools.py
@@ -21,8 +18,8 @@ from rich.console import Console
 
 
 __all__ = [
-    "get_lco_weather_data",
     "get_lco_seeing_data",
+    "get_lco_weather_data",
     "ingest_dataframe_to_influxdb",
 ]
 
@@ -74,7 +71,7 @@ def format_time(time: str | float) -> str:
         time = (
             datetime.datetime.fromtimestamp(
                 time,
-                tz=datetime.timezone.utc,
+                tz=datetime.UTC,
             )
             .isoformat(timespec="seconds")
             .replace("+00:00", "")

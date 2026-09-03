@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-08
 # @Filename: ieb.py
@@ -10,8 +7,6 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-
-from typing import List, Optional
 
 from drift import Device, Drift
 
@@ -54,9 +49,9 @@ class DriftSource(Source):
     def __init__(
         self,
         name: str,
-        drift_instance: Optional[Drift] = None,
-        config: Optional[str] = None,
-        devices: Optional[List[str]] = None,
+        drift_instance: Drift | None = None,
+        config: str | None = None,
+        devices: list[str] | None = None,
         delay: float = 5.0,
         measure_timeout: float = 5.0,
         **kwargs,
@@ -73,7 +68,7 @@ class DriftSource(Source):
         else:
             raise ValueError("Either drift_instance or config are needed.")
 
-        self.devices: List[Device]
+        self.devices: list[Device]
         if devices is None:
             self.devices = [
                 device
@@ -115,7 +110,7 @@ class DriftSource(Source):
         while True:
             try:
                 await asyncio.wait_for(self.measure_devices(), timeout=timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 if report_new_errors:
                     log.error(f"{self.name}: timed out measuring devices.")
             except Exception as err:

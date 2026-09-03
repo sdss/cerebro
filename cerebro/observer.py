@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2020-08-11
 # @Filename: observer.py
@@ -11,8 +8,6 @@ from __future__ import annotations
 import abc
 import asyncio
 import os
-
-from typing import Optional, Type
 
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import ASYNCHRONOUS
@@ -91,8 +86,8 @@ class InfluxDB(Observer):
         name: str,
         org: str,
         url: str = "http://localhost:9999",
-        token: Optional[str] = None,
-        default_bucket: Optional[str] = None,
+        token: str | None = None,
+        default_bucket: str | None = None,
     ):
         super().__init__(name)
 
@@ -130,7 +125,7 @@ class InfluxDB(Observer):
             log.error(f"Failed writing to bucket {bucket}: {ee}")
 
 
-def get_observer_subclass(type_: str) -> Type[Observer] | None:
+def get_observer_subclass(type_: str) -> type[Observer] | None:
     """Returns a `.Observer` subclass based on its ``data_type``."""
 
     for subclass in Observer.__subclasses__():

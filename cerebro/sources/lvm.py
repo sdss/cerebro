@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2021-03-27
 # @Filename: lvm.py
@@ -15,7 +12,7 @@ import os
 import re
 from contextlib import suppress
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import asyncudp
 from lvmopstools.devices import read_ion_pumps
@@ -29,7 +26,7 @@ from .drift import DriftSource
 from .source import DataPoints, Source, TCPSource
 
 
-__all__ = ["GoveeSource", "Sens4Source", "LVMIEBSource", "ThermistorsSource"]
+__all__ = ["GoveeSource", "LVMIEBSource", "Sens4Source", "ThermistorsSource"]
 
 
 class GoveeSource(TCPSource):
@@ -42,7 +39,7 @@ class GoveeSource(TCPSource):
         self,
         *args,
         address: str,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -77,7 +74,7 @@ class GoveeSource(TCPSource):
         hum = float(hum)
 
         # Check the timestamp. If the data point is too old, skip.
-        utc = datetime.timezone.utc
+        utc = datetime.UTC
         if (datetime.datetime.now(utc) - date).seconds > 2 * self.delay:
             return None
 
@@ -216,7 +213,7 @@ class LN2Scale(TCPSource):
     ) -> list[dict] | None:
         """Queries the TCP server and returns a list of points."""
 
-        writer.write(("~*P*~\n").encode())
+        writer.write(b"~*P*~\n")
         await writer.drain()
 
         data = await asyncio.wait_for(reader.readline(), timeout=5)
@@ -251,8 +248,8 @@ class CheckFileExistsSource(Source):
         name: str,
         file: str,
         bucket: str = "sensors",
-        tags: Dict[str, Any] = {},
-        delay: Optional[float] = None,
+        tags: dict[str, Any] = {},
+        delay: float | None = None,
     ):
         super().__init__(name, bucket=bucket, tags=tags)
 
@@ -343,7 +340,7 @@ class ThermistorsSource(Source):
         host: str,
         port: int = 1025,
         mapping: dict[str, str] = {},
-        bucket: Optional[str] = None,
+        bucket: str | None = None,
         tags: dict[str, Any] = {},
         interval: float | None = None,
     ):
@@ -417,7 +414,7 @@ class ThermistorsSource(Source):
                         )
                     )
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 log.error(f"Timed out connect or reading thermistors at {self.host!r}.")
 
             except Exception as err:

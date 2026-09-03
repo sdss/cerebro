@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2021-05-04
 # @Filename: AMQP.py
@@ -9,10 +6,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import MutableMapping
+from collections.abc import Callable, Coroutine, MutableMapping
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional
+from typing import TYPE_CHECKING, Any
 
 from clu import AMQPClient, AMQPReply
 
@@ -123,7 +120,7 @@ class AMQPSource(Source):
     def __init__(
         self,
         name: str,
-        bucket: Optional[str] = None,
+        bucket: str | None = None,
         tags: dict[str, Any] = {},
         host: str = "localhost",
         port: int = 5672,
