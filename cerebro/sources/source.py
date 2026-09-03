@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import asyncio
 
-from typing import Any, NamedTuple
+from typing import Any, ClassVar, NamedTuple
 
 import rx
 from lvmopstools.socket import AsyncSocketHandler
@@ -73,7 +73,7 @@ class Source(Subject):
     """
 
     #: str: The type of data source.
-    source_type: str | None = None
+    source_type: ClassVar[str | None] = None
 
     #: float: Seconds to wait for initialisation.
     timeout: float | None = None
@@ -82,7 +82,7 @@ class Source(Subject):
         self,
         name: str,
         bucket: str | None = None,
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
     ):
         if self.source_type is None:
             raise ValueError("Subclasses must override source_type.")
@@ -92,7 +92,7 @@ class Source(Subject):
         self.name = name
         self.bucket = bucket
 
-        self.tags = tags.copy()
+        self.tags = tags.copy() if tags else {}
         self.tags.update({"source": self.source_type})
 
         self.running = False

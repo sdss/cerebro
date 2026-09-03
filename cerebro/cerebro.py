@@ -14,6 +14,7 @@ import pathlib
 import socket
 import time
 import warnings
+from inspect import iscoroutinefunction
 
 from typing import Any
 
@@ -36,7 +37,12 @@ class SourceList(list):
 
     """
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, on_next, sources=[]):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        on_next,
+        sources: list[Source] | None = None,
+    ):
         super().__init__()
 
         self.on_next = on_next
@@ -44,12 +50,14 @@ class SourceList(list):
         self.scheduler = AsyncIOScheduler(loop)
 
         self._name_to_source = {}
+
+        sources = sources or []
         for source in sources:
             self.add_source(source)
 
     def stop(self):
         for source in self:
-            if asyncio.iscoroutinefunction(source.stop):
+            if iscoroutinefunction(source.stop):
                 close_task = asyncio.create_task(source.stop())
                 while not close_task.done():
                     pass
@@ -72,7 +80,7 @@ class SourceList(list):
     def append(self, source):
         return self.add_source(source)
 
-    def pop(self, index):
+    def pop(self, index=-1):
         return self.remove_source(self[index].name)
 
     def get(self, name):
@@ -91,7 +99,7 @@ class SourceList(list):
 
         source.subscribe(on_next=self.on_next, scheduler=self.scheduler)
 
-        assert asyncio.iscoroutinefunction(source.start)
+        assert iscoroutinefunction(source.start)
 
         # We add the source even if it's not running.
         self._name_to_source[source.name] = source
@@ -153,7 +161,7 @@ class Cerebellum(type):
         elif isinstance(config_file, dict):
             config = config_file.copy()
         else:
-            raise ValueError(f"Invalid type {type(config_file)} for config.")
+            raise TypeError(f"Invalid type {type(config_file)} for config.")
         config.update(kwargs)
 
         profiles_data = config.pop("profiles", {})
@@ -318,9 +326,9 @@ class Cerebro(Subject, metaclass=MetaCerebro):
     def __init__(
         self,
         name: str = "cerebro",
-        tags: dict[str, Any] = {},
-        sources: list[Source | str] = [],
-        observers: list[Observer] = [],
+        tags: dict[str, Any] | None = None,
+        sources: list[Source] | None = None,
+        observers: list[Observer] | None = None,
         config: str | dict | pathlib.Path | None = None,
         profile: str | None = None,
         ntp_server: str = "us.pool.ntp.org",
@@ -351,12 +359,13 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         self.sources = SourceList(self.loop, self.on_next, sources)
 
+        observers = observers or []
         for observer in observers:
             observer.set_cerebro(self)
             log.debug(f"Added observer of type {observer.observer_type}.")
 
         # Add the name of the instance and the host to the default tags.
-        self.tags = tags.copy()
+        self.tags = tags.copy() if tags is not None else {}
 
         self._offset = 0
         self.loop.call_soon(self.update_time_offset, ntp_server)
@@ -379,7 +388,7 @@ class Cerebro(Subject, metaclass=MetaCerebro):
         if self.status_server is not None:
             self.status_server.close()
 
-    def on_next(self, data):
+    def on_next(self, value):
         """Processes a list of measurements from a data source.
 
         Measurements is expected to be a namedtuple or other kind of
@@ -398,18 +407,18 @@ class Cerebro(Subject, metaclass=MetaCerebro):
 
         """
 
-        if data.data == [] or data.data is None:
+        if value.data == [] or value.data is None:
             return
 
         meas_time = int((time.time() + self._offset / 1e3) * 1e9)
-        for point in data.data:
+        for point in value.data:
             if "time" not in point:
                 # Time is in nanoseconds since UNIX epoch.
                 point["time"] = meas_time
             point["tags"].update(self.tags)
 
         # Propagate to all the observers.
-        Subject.on_next(self, data)
+        Subject.on_next(self, value)
 
     def update_time_offset(self, server: str):
         """Updates the internal offset with the NTP server."""

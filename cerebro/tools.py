@@ -95,11 +95,11 @@ async def get_from_lco_api(
     start_time_dt = datetime.datetime.strptime(
         start_time,
         "%Y-%m-%dT%H:%M:%S",
-    )
+    ).replace(tzinfo=datetime.UTC)
     end_time_dt = datetime.datetime.strptime(
         end_time,
         "%Y-%m-%dT%H:%M:%S",
-    )
+    ).replace(tzinfo=datetime.UTC)
 
     if measurement == "weather":
         schema = LCO_WEATHER_SCHEMA
@@ -347,7 +347,7 @@ async def ingest_dataframe_to_influxdb(
     bucket: str,
     org: str,
     token: str | None = None,
-    tags: dict[str, str] = {},
+    tags: dict[str, str] | None = None,
     batch_points: int = 1000,
 ):
     """Ingests a Polars DataFrame to InfluxDB.
@@ -390,7 +390,7 @@ async def ingest_dataframe_to_influxdb(
             time = row.pop(time_column)
             point = {
                 "measurement": measurement,
-                "tags": tags,
+                "tags": tags or {},
                 "time": time,
                 "fields": row,
             }

@@ -27,16 +27,19 @@ from .source import DataPoints, Source
 def process_keyword(
     keyword: Keyword,
     actor: str,
-    tags: dict = {},
-    keyword_tags: dict = {},
-    casts: dict = {},
+    tags: dict[str, Any] | None = None,
+    keyword_tags: dict[str, Any] | None = None,
+    casts: dict[str, str] | None = None,
 ):
     """Creates a series of data points out of a keyword."""
 
     name = keyword.name
     keyword_tag_value = None
 
-    points = []
+    casts = casts or {}
+    keyword_tags = keyword_tags or {}
+
+    points: list[dict[str, Any]] = []
 
     ii = 0
     for idx, key_value in enumerate(keyword.values):
@@ -47,7 +50,7 @@ def process_keyword(
         else:
             key_name = f"_{ii}"
 
-        value_tags = tags.copy()
+        value_tags = tags.copy() if tags else {}
         if hasattr(key_value, "units"):
             value_tags.update({"units": key_value.units})
 
@@ -80,9 +83,11 @@ def process_keyword(
 
             fields = {f"{name}{key_name}": parsed}
 
-            if f"{actor}.{name}" in keyword_tags:
-                if idx == keyword_tags[f"{actor}.{name}"]["index"]:
-                    keyword_tag_value = parsed
+            if (
+                f"{actor}.{name}" in keyword_tags
+                and idx == keyword_tags[f"{actor}.{name}"]["index"]
+            ):
+                keyword_tag_value = parsed
 
         points.append({"measurement": actor, "tags": value_tags, "fields": fields})
 
@@ -149,16 +154,23 @@ class TronSource(Source):
         self,
         name: str,
         bucket: str | None = None,
-        tags: dict[str, Any] = {},
-        actors: list[str] = [],
+        tags: dict[str, Any] | None = None,
+        actors: list[str] | None = None,
         host: str = "localhost",
         port: int = 6093,
         keywords: list[str] | None = None,
-        commands: dict[str, float] = {},
-        casts: dict[str, str] = {},
-        keyword_tags: dict[str, dict] = {},
+        commands: dict[str, float] | None = None,
+        casts: dict[str, str] | None = None,
+        keyword_tags: dict[str, dict] | None = None,
     ):
         super().__init__(name, bucket=bucket, tags=tags)
+
+        actors = actors or []
+        commands = commands or {}
+        casts = casts or {}
+
+        keywords = keywords or []
+        keyword_tags = keyword_tags or {}
 
         self.tron = TronConnection(f"cerebro.{name}", host, port, models=actors)
         self.keywords = keywords
@@ -171,7 +183,7 @@ class TronSource(Source):
 
         for model_name in self.tron.models:
             model = self.tron.models[model_name]
-            model.register_callback(self.process_keyword)  # type: ignore
+            model.register_callback(self.process_keyword)
 
     async def start(self):
         """Starts the connection to Tron."""
@@ -209,8 +221,7 @@ class TronSource(Source):
                 await task
         self._command_tasks = []
 
-        if self.tron and self.tron.transport:
-            self.tron.stop()
+        self.tron.stop()
 
         self.running = False
 
@@ -222,9 +233,8 @@ class TronSource(Source):
 
         actor = keyword.model.name
 
-        if self.keywords:
-            if actor in self.keywords and name in self.keywords[actor]:
-                return
+        if self.keywords and actor in self.keywords and name in self.keywords[actor]:
+            return
 
         if len(key.values) == 0:
             return
@@ -292,9 +302,9 @@ class ActorClientSource(Source):
         commands: list[str],
         interval: float = 60.0,
         bucket: str | None = None,
-        tags: dict[str, Any] = {},
-        casts: dict[str, str] = {},
-        keyword_tags: dict[str, dict] = {},
+        tags: dict[str, Any] | None = None,
+        casts: dict[str, str] | None = None,
+        keyword_tags: dict[str, dict] | None = None,
         store_broadcasts: bool = False,
     ):
         super().__init__(name, bucket=bucket, tags=tags)
@@ -309,9 +319,9 @@ class ActorClientSource(Source):
         self.commands = commands
         self._command_tasks: list[asyncio.Task] = []
         self.interval = interval
-        self.casts = casts
+        self.casts = casts or {}
         self.store_broadcasts = store_broadcasts
-        self.keyword_tags = keyword_tags
+        self.keyword_tags = keyword_tags or {}
 
         self.buffer = b""
 

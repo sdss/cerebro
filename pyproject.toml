@@ -5,7 +5,7 @@ description = "Telemetry management and time series for SDSS-V"
 authors = [ { name = "José Sánchez-Gallego", email = "gallegoj@uw.edu" } ]
 license = "BSD-3-Clause"
 readme = "README.md"
-requires-python = ">=3.10,<4"
+requires-python = ">=3.11,<4"
 
 dependencies = [
     "numpy>=2.0.0",
@@ -64,8 +64,8 @@ line-length = 88
 target-version = 'py312'
 exclude = ["typings/"]
 
-[ruff.lint]
-select = ["E", "F", "I"]
+[tool.ruff.lint]
+ignore = ["N999", "BLE001"]
 unfixable = ["F841"]
 
 [tool.ruff.lint.per-file-ignores]

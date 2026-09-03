@@ -92,11 +92,12 @@ class ClientProtocol(ReconnectingTCPClientProtocol):
 
     def __init__(self, on_received, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self._on_received = on_received
-        self.transport: asyncio.Transport | None = None
+        self.transport: asyncio.BaseTransport | None = None
 
     def data_received(self, data):
         asyncio.get_running_loop().call_soon(self._on_received, data)
 
-    def connection_made(self, transport: asyncio.Transport):
+    def connection_made(self, transport: asyncio.BaseTransport):
         self.transport = transport

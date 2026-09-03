@@ -142,7 +142,7 @@ class DriftSource(Source):
                     continue
 
                 if device.__type__ == "relay":
-                    value = True if value == "closed" else False
+                    value = value == "closed"
                     units = None
                 tags = self.tags.copy()
                 if units:

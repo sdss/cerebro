@@ -55,7 +55,7 @@ class Observer(RXObserver, metaclass=abc.ABCMeta):
         self.cerebro.subscribe(self, scheduler=self.scheduler)
 
     @abc.abstractmethod
-    def on_next(self, data):
+    def on_next(self, value):
         pass
 
 
@@ -75,7 +75,6 @@ class InfluxDB(Observer):
     default_bucket
         The default bucket where to write data. Can be overridden by each
         individual `data source <.Source>`.
-
 
     """
 
@@ -111,15 +110,15 @@ class InfluxDB(Observer):
         if hasattr(self, "client"):
             self.client.__del__()
 
-    def on_next(self, data):
+    def on_next(self, value):
         """Loads data to InfluxDB."""
 
-        bucket = data.bucket or self.default_bucket
+        bucket = value.bucket or self.default_bucket
         if not bucket:
             raise ValueError("bucket is not defined.")
 
         try:
-            result = self.write_client.write(bucket=bucket, record=data.data)
+            result = self.write_client.write(bucket=bucket, record=value.data)
             result.get()
         except ApiException as ee:
             log.error(f"Failed writing to bucket {bucket}: {ee}")

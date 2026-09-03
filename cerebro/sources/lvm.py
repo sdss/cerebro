@@ -12,7 +12,7 @@ import os
 import re
 from contextlib import suppress
 
-from typing import Any
+from typing import Any, ClassVar
 
 import asyncudp
 from lvmopstools.devices import read_ion_pumps
@@ -241,14 +241,14 @@ class CheckFileExistsSource(Source):
     """Checks if a file exists."""
 
     source_type = "check_file_exists"
-    delay = 60
+    delay: float = 60
 
     def __init__(
         self,
         name: str,
         file: str,
         bucket: str = "sensors",
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
         delay: float | None = None,
     ):
         super().__init__(name, bucket=bucket, tags=tags)
@@ -339,9 +339,9 @@ class ThermistorsSource(Source):
         name: str,
         host: str,
         port: int = 1025,
-        mapping: dict[str, str] = {},
+        mapping: dict[str, str] | None = None,
         bucket: str | None = None,
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
         interval: float | None = None,
     ):
         super().__init__(name, bucket, tags)
@@ -350,7 +350,7 @@ class ThermistorsSource(Source):
 
         self.host = host
         self.port = port
-        self.mapping = mapping
+        self.mapping = mapping or {}
 
         self._runner: asyncio.Task | None = None
 
@@ -456,7 +456,7 @@ class LVMIonPumpSource(Source):
 
     """
 
-    source_type: str = "lvm_ion_pump"
+    source_type: ClassVar[str] = "lvm_ion_pump"
     interval: float = 15
 
     def __init__(
@@ -465,7 +465,7 @@ class LVMIonPumpSource(Source):
         cameras: list[str],
         controller: str | None = None,
         bucket: str | None = None,
-        tags: dict = {},
+        tags: dict[str, Any] | None = None,
         interval: float | None = None,
     ):
         super().__init__(name, bucket, tags)

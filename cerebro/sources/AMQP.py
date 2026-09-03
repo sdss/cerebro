@@ -17,7 +17,7 @@ from .source import DataPoints, Source
 
 
 if TYPE_CHECKING:
-    from aio_pika import IncomingMessage
+    from aio_pika.abc import AbstractIncomingMessage
 
 __all__ = ["AMQPSource"]
 
@@ -26,11 +26,12 @@ def flatten_dict(
     d: MutableMapping,
     parent_key: str = "",
     sep: str = ".",
-    groupers: list[str] = [],
+    groupers: list[str] | None = None,
 ) -> tuple[MutableMapping, dict]:
     """From https://bit.ly/3KN9v3G."""
 
     groupings = {}
+    groupers = groupers or []
 
     items = []
     for k, v in d.items():
@@ -68,7 +69,7 @@ class ReplyClient(AMQPClient):
 
         self.callback = callback
 
-    async def handle_reply(self, message: IncomingMessage):
+    async def handle_reply(self, message: AbstractIncomingMessage):
         """Prints the formatted reply."""
 
         reply = await super().handle_reply(message)
@@ -121,17 +122,17 @@ class AMQPSource(Source):
         self,
         name: str,
         bucket: str | None = None,
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
         host: str = "localhost",
         port: int = 5672,
         user: str = "guest",
         password: str = "guest",
         keywords: list[str] | None = None,
-        groupers: list[str] = [],
+        groupers: list[str] | None = None,
         internal: bool = False,
-        commands: dict[str, float] = {},
+        commands: dict[str, float] | None = None,
     ):
-        super().__init__(name, bucket=bucket, tags=tags)
+        super().__init__(name, bucket=bucket, tags=(tags or {}))
 
         self.client = ReplyClient(
             f"cerebro_client_{name}",
@@ -142,11 +143,11 @@ class AMQPSource(Source):
             callback=self.process_keyword,
         )
 
-        self.keywords = keywords
-        self.groupers = groupers
+        self.keywords = keywords or []
+        self.groupers = groupers or []
         self.internal = internal
 
-        self.commands = commands
+        self.commands = commands or {}
         self._command_tasks: list[asyncio.Task] = []
 
     async def start(self):

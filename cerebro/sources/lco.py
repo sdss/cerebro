@@ -45,7 +45,7 @@ class LCOSeeingDataSource(Source):
         name: str,
         bucket: str | None = None,
         route: str = "dimm_state",
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
         interval: float | None = None,
     ):
         super().__init__(name, bucket, tags)
@@ -152,7 +152,7 @@ class LCOWeatherDataSource(Source):
         name: str,
         bucket: str | None = None,
         route: str = "dimm_state",
-        tags: dict[str, Any] = {},
+        tags: dict[str, Any] | None = None,
         interval: float | None = None,
     ):
         super().__init__(name, bucket, tags)
